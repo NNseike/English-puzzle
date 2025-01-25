@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>英語文法パズル（レスポンシブ対応）</title>
+  <style>
+    /* ベースのリセット */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .sentence-box {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      min-height: 50px;
+      background-color: #fff;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      text-align: left;
+    }
+
+    /* 単語ボタンのラッパをグリッドにしてレスポンシブ対応 */
+    .words {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .word {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border: none;
+      transition: background-color 0.2s;
+    }
+
+    .word:hover {
+      background-color: #0056b3;
+    }
+
+    .feedback {
+      margin-top: 0.5rem;
+      font-weight: bold;
+      min-height: 1.5rem;
+    }
+
+    .next-button {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+
+    .next-button:hover {
+      background-color: #218838;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.25rem;
+      }
+      .sentence-box {
+        font-size: 0.95rem;
+      }
+      .word {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+      }
+      .next-button {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>英語文法パズル（レスポンシブ対応）</h1>
+    <p>以下の日本語を英語に翻訳してください:</p>
+    <p id="japanese-sentence"><strong></strong></p>
+
+    <div class="sentence-box" id="sentence-box"></div>
+    <div class="words" id="word-buttons"></div>
+    <div class="feedback" id="feedback"></div>
+    <button id="next-button" class="next-button">次に進む</button>
+  </div>
+
+  <script>
+    // 問題データ
+    const sentences = [
+  {
+    japanese: "私は昨日公園に行きました。",
+    english: "I went to the park yesterday",
+    words: ["I", "went", "to", "the", "park", "yesterday"]
+  },
+  {
+    japanese: "彼は毎朝コーヒーを飲みます。",
+    english: "He drinks coffee every morning",
+    words: ["He", "drinks", "coffee", "every", "morning"]
+  },
+  {
+    japanese: "私たちは先週映画館で映画を見ました。",
+    english: "We watched a movie at the cinema last week",
+    words: ["We", "watched", "a", "movie", "at", "the", "cinema", "last", "week"]
+  },
+  {
+    japanese: "彼女は英語と日本語を話すことができます。",
+    english: "She can speak English and Japanese",
+    words: ["She", "can", "speak", "English", "and", "Japanese"]
+  },
+  {
+    japanese: "私は宿題を終わらせた後にゲームをします。",
+    english: "I play games after finishing my homework",
+    words: ["I", "play", "games", "after", "finishing", "my", "homework"]
+  },
+  // ここから25種類の新しい文
+  {
+    japanese: "今日はとてもいい天気だからピクニックに行きませんか？",
+    english: "The weather is great today so shall we go for a picnic",
+    words: ["The", "weather", "is", "great", "today", "so", "shall", "we", "go", "for", "a", "picnic"]
+  },
+  {
+    japanese: "この本は読み終わったら返してくれますか？",
+    english: "Could you return this book after you finish reading it",
+    words: ["Could", "you", "return", "this", "book", "after", "you", "finish", "reading", "it"]
+  },
+  {
+    japanese: "私は明日の朝早く起きてジョギングをするつもりです。",
+    english: "I am going to wake up early tomorrow morning to go jogging",
+    words: ["I", "am", "going", "to", "wake", "up", "early", "tomorrow", "morning", "to", "go", "jogging"]
+  },
+  {
+    japanese: "急いで！電車はあと5分で出発します。",
+    english: "Hurry up the train will leave in five minutes",
+    words: ["Hurry", "up", "the", "train", "will", "leave", "in", "five", "minutes"]
+  },
+  {
+    japanese: "彼らは海外旅行に行くことを本当に楽しみにしています。",
+    english: "They are really looking forward to traveling abroad",
+    words: ["They", "are", "really", "looking", "forward", "to", "traveling", "abroad"]
+  },
+  {
+    japanese: "私の母はとても料理が上手で、おいしいケーキを作ります。",
+    english: "My mother is very good at cooking and makes delicious cakes",
+    words: ["My", "mother", "is", "very", "good", "at", "cooking", "and", "makes", "delicious", "cakes"]
+  },
+  {
+    japanese: "明日のプレゼンテーションの準備はできていますか？",
+    english: "Are you ready for the presentation tomorrow",
+    words: ["Are", "you", "ready", "for", "the", "presentation", "tomorrow"]
+  },
+  {
+    japanese: "彼は音楽が大好きでギターを弾くのが得意です。",
+    english: "He loves music and is good at playing the guitar",
+    words: ["He", "loves", "music", "and", "is", "good", "at", "playing", "the", "guitar"]
+  },
+  {
+    japanese: "A: それを自分でやるつもりですか？ B: いいえ、手伝ってもらいたいです。",
+    english: "A Are you going to do it yourself B No I would like some help",
+    words: ["A", "Are", "you", "going", "to", "do", "it", "yourself", "B", "No", "I", "would", "like", "some", "help"]
+  },
+  {
+    japanese: "A: どれくらい日本に滞在する予定ですか？ B: 2週間くらい滞在する予定です。",
+    english: "A How long are you planning to stay in Japan B I am planning to stay for two weeks",
+    words: ["A", "How", "long", "are", "you", "planning", "to", "stay", "in", "Japan", "B", "I", "am", "planning", "to", "stay", "for", "two", "weeks"]
+  },
+  {
+    japanese: "電話が鳴っているのに誰も出ませんね。",
+    english: "The phone is ringing but nobody is answering",
+    words: ["The", "phone", "is", "ringing", "but", "nobody", "is", "answering"]
+  },
+  {
+    japanese: "彼らはとても疲れていたので、その夜は早く寝ました。",
+    english: "They were very tired so they went to bed early that night",
+    words: ["They", "were", "very", "tired", "so", "they", "went", "to", "bed", "early", "that", "night"]
+  },
+  {
+    japanese: "この道をまっすぐ進んで、次の角を右に曲がってください。",
+    english: "Go straight down this road then turn right at the next corner",
+    words: ["Go", "straight", "down", "this", "road", "then", "turn", "right", "at", "the", "next", "corner"]
+  },
+  {
+    japanese: "私は週末に友達と映画を見る約束があります。",
+    english: "I have plans to watch a movie with my friend this weekend",
+    words: ["I", "have", "plans", "to", "watch", "a", "movie", "with", "my", "friend", "this", "weekend"]
+  },
+  {
+    japanese: "A: 何が食べたいですか？ B: お寿司が食べたいです。",
+    english: "A What do you want to eat B I want to eat sushi",
+    words: ["A", "What", "do", "you", "want", "to", "eat", "B", "I", "want", "to", "eat", "sushi"]
+  },
+  {
+    japanese: "彼女は新しい仕事に就いて毎日とても忙しそうです。",
+    english: "She started a new job and seems very busy every day",
+    words: ["She", "started", "a", "new", "job", "and", "seems", "very", "busy", "every", "day"]
+  },
+  {
+    japanese: "このレストランは美味しいだけでなく値段も安いです。",
+    english: "This restaurant is not only delicious but also cheap",
+    words: ["This", "restaurant", "is", "not", "only", "delicious", "but", "also", "cheap"]
+  },
+  {
+    japanese: "A: 今夜は何をしますか？ B: 家でリラックスしてテレビを見るつもりです。",
+    english: "A What are you doing tonight B I will relax at home and watch TV",
+    words: ["A", "What", "are", "you", "doing", "tonight", "B", "I", "will", "relax", "at", "home", "and", "watch", "TV"]
+  },
+  {
+    japanese: "もし時間があれば、あなたを駅まで車で迎えに行きます。",
+    english: "If I have time I will pick you up at the station by car",
+    words: ["If", "I", "have", "time", "I", "will", "pick", "you", "up", "at", "the", "station", "by", "car"]
+  },
+  {
+    japanese: "彼は数学の試験に合格するために毎日熱心に勉強しました。",
+    english: "He studied hard every day to pass his math exam",
+    words: ["He", "studied", "hard", "every", "day", "to", "pass", "his", "math", "exam"]
+  },
+  {
+    japanese: "A: この仕事の締め切りはいつですか？ B: 来週の月曜日です。",
+    english: "A When is the deadline for this work B It is next Monday",
+    words: ["A", "When", "is", "the", "deadline", "for", "this", "work", "B", "It", "is", "next", "Monday"]
+  },
+  {
+    japanese: "私は最近読書にハマっていて毎週新しい本を読んでいます。",
+    english: "I have been into reading lately and I read a new book every week",
+    words: ["I", "have", "been", "into", "reading", "lately", "and", "I", "read", "a", "new", "book", "every", "week"]
+  },
+  {
+    japanese: "これはあなたの傘ですか、それとも誰かほかの人のですか？",
+    english: "Is this your umbrella or does it belong to someone else",
+    words: ["Is", "this", "your", "umbrella", "or", "does", "it", "belong", "to", "someone", "else"]
+  },
+  {
+    japanese: "午後は雨が降るそうなので傘を忘れないでください。",
+    english: "It is going to rain this afternoon so do not forget your umbrella",
+    words: ["It", "is", "going", "to", "rain", "this", "afternoon", "so", "do", "not", "forget", "your", "umbrella"]
+  },
+  {
+    japanese: "A: 週末は何をしましたか？ B: 友人と海に行って泳いでバーベキューをしました。",
+    english: "A What did you do on the weekend B I went to the beach with my friend swam and had a barbecue",
+    words: ["A", "What", "did", "you", "do", "on", "the", "weekend", "B", "I", "went", "to", "the", "beach", "with", "my", "friend", "swam", "and", "had", "a", "barbecue"]
+  },
+    {
+  japanese: "先週は台風が近づいていたため予定していたキャンプが中止になったので家でボードゲーム大会を開きました。",
+  english: "Because a typhoon was approaching last week the planned camping trip was canceled so we held a board game tournament at home",
+  words: [
+    "Because", "a", "typhoon", "was", "approaching", "last", "week",
+    "the", "planned", "camping", "trip", "was", "canceled", "so",
+    "we", "held", "a", "board", "game", "tournament", "at", "home"
+  ]
+},
+{
+  japanese: "私は大学を卒業してすぐに海外に留学しようと考えていましたが、家族の事情で1年遅れることになりました。",
+  english: "I was planning to study abroad immediately after graduating from university but family circumstances delayed it by one year",
+  words: [
+    "I", "was", "planning", "to", "study", "abroad", "immediately",
+    "after", "graduating", "from", "university", "but", "family",
+    "circumstances", "delayed", "it", "by", "one", "year"
+  ]
+},
+{
+  japanese: "A: そんなに焦らなくても大丈夫ですよ。B: でも締め切りが明日だと聞いてとても不安なんです。",
+  english: "A You do not have to rush so much B But I heard the deadline is tomorrow and I am really worried",
+  words: [
+    "A", "You", "do", "not", "have", "to", "rush", "so", "much",
+    "B", "But", "I", "heard", "the", "deadline", "is", "tomorrow",
+    "and", "I", "am", "really", "worried"
+  ]
+},
+{
+  japanese: "このレストランはビーガンメニューだけでなくグルテンフリーのオプションも豊富で健康志向の人にぴったりです。",
+  english: "This restaurant not only has a wide range of vegan menus but also many gluten free options which is perfect for health conscious people",
+  words: [
+    "This", "restaurant", "not", "only", "has", "a", "wide", "range",
+    "of", "vegan", "menus", "but", "also", "many", "gluten", "free",
+    "options", "which", "is", "perfect", "for", "health", "conscious",
+    "people"
+  ]
+},
+{
+  japanese: "友人とドライブに行ったら思いがけず絶景スポットを見つけて、そこで一日中写真撮影を楽しみました。",
+  english: "I went for a drive with my friend and unexpectedly found a breathtaking spot where we spent the whole day taking photos",
+  words: [
+    "I", "went", "for", "a", "drive", "with", "my", "friend", "and",
+    "unexpectedly", "found", "a", "breathtaking", "spot", "where",
+    "we", "spent", "the", "whole", "day", "taking", "photos"
+  ]
+},
+{
+  japanese: "A: 昨日のミーティングで話し合った内容を共有してもらえますか？ B: はい、議事録を今日中にメールでお送りします。",
+  english: "A Could you share what we discussed in yesterday's meeting B Yes I will send the minutes by email today",
+  words: [
+    "A", "Could", "you", "share", "what", "we", "discussed", "in",
+    "yesterday's", "meeting", "B", "Yes", "I", "will", "send", "the",
+    "minutes", "by", "email", "today"
+  ]
+},
+{
+  japanese: "新しいプロジェクトが始まってから毎日残業続きで、週末に少し休息を取れるかどうかも分かりません。",
+  english: "Ever since the new project began I have been working overtime every day and I am not even sure if I can rest this weekend",
+  words: [
+    "Ever", "since", "the", "new", "project", "began", "I", "have",
+    "been", "working", "overtime", "every", "day", "and", "I", "am",
+    "not", "even", "sure", "if", "I", "can", "rest", "this", "weekend"
+  ]
+},
+{
+  japanese: "留学先ではホストファミリーと仲良くなるだけでなく現地のコミュニティ活動にも参加して多くの友達を作りたいです。",
+  english: "I want to not only get along with my host family but also join local community activities to make many friends",
+  words: [
+    "I", "want", "to", "not", "only", "get", "along", "with", "my",
+    "host", "family", "but", "also", "join", "local", "community",
+    "activities", "to", "make", "many", "friends"
+  ]
+},
+{
+  japanese: "A: 今夜の飲み会に参加できますか？ B: すみません、明日の朝早く出張があるので今回は遠慮します。",
+  english: "A Can you join us for drinks tonight B Sorry I have to go on a business trip early tomorrow morning so I will pass this time",
+  words: [
+    "A", "Can", "you", "join", "us", "for", "drinks", "tonight",
+    "B", "Sorry", "I", "have", "to", "go", "on", "a", "business",
+    "trip", "early", "tomorrow", "morning", "so", "I", "will",
+    "pass", "this", "time"
+  ]
+},
+{
+  japanese: "週末には家族全員で大掃除をして、普段は手の届かない場所も徹底的にきれいにしました。",
+  english: "Over the weekend my whole family did a big cleaning and we thoroughly tidied up places we usually cannot reach",
+  words: [
+    "Over", "the", "weekend", "my", "whole", "family", "did", "a",
+    "big", "cleaning", "and", "we", "thoroughly", "tidied", "up",
+    "places", "we", "usually", "cannot", "reach"
+  ]
+},
+{
+  japanese: "数年前に始めたギターの練習がようやく身を結び、最近は友人の前で弾き語りもできるようになりました。",
+  english: "The guitar practice I started a few years ago is finally paying off and now I can even perform in front of my friends",
+  words: [
+    "The", "guitar", "practice", "I", "started", "a", "few", "years",
+    "ago", "is", "finally", "paying", "off", "and", "now", "I", "can",
+    "even", "perform", "in", "front", "of", "my", "friends"
+  ]
+},
+{
+  japanese: "A: 昼休みにちょっと散歩に行きませんか？ B: いいですね、最近運動不足なので少し体を動かしたいです。",
+  english: "A Would you like to go for a short walk during lunch break B Sounds good I have been lacking exercise lately and want to move around a bit",
+  words: [
+    "A", "Would", "you", "like", "to", "go", "for", "a", "short",
+    "walk", "during", "lunch", "break", "B", "Sounds", "good", "I",
+    "have", "been", "lacking", "exercise", "lately", "and", "want",
+    "to", "move", "around", "a", "bit"
+  ]
+},
+{
+  japanese: "新しいスマートフォンを買ったら機能が多すぎて逆に何を使えばいいのか分からなくなってしまいました。",
+  english: "After buying a new smartphone I found it has too many features and now I do not know which ones I should actually use",
+  words: [
+    "After", "buying", "a", "new", "smartphone", "I", "found",
+    "it", "has", "too", "many", "features", "and", "now", "I",
+    "do", "not", "know", "which", "ones", "I", "should", "actually",
+    "use"
+  ]
+},
+{
+  japanese: "専門家の講演を聞くためには事前登録が必要ですが、無料なのでぜひ参加してみてください。",
+  english: "You need to register in advance to attend the expert's lecture but it is free so please feel free to join",
+  words: [
+    "You", "need", "to", "register", "in", "advance", "to", "attend",
+    "the", "expert's", "lecture", "but", "it", "is", "free", "so",
+    "please", "feel", "free", "to", "join"
+  ]
+},
+{
+  japanese: "A: 来週の会議では新製品のデモを行う予定ですか？ B: ええ、チームが準備を進めているので時間が許せば披露するつもりです。",
+  english: "A Are you planning to demonstrate the new product in next week's meeting B Yes the team is preparing so we will show it if time permits",
+  words: [
+    "A", "Are", "you", "planning", "to", "demonstrate", "the", "new",
+    "product", "in", "next", "week's", "meeting", "B", "Yes", "the",
+    "team", "is", "preparing", "so", "we", "will", "show", "it",
+    "if", "time", "permits"
+  ]
+},
+{
+  japanese: "この地域では昔から行われている伝統的なお祭りがあり、毎年多くの観光客でにぎわいます。",
+  english: "There is a traditional festival in this area that has been held for centuries and it attracts many tourists every year",
+  words: [
+    "There", "is", "a", "traditional", "festival", "in", "this",
+    "area", "that", "has", "been", "held", "for", "centuries",
+    "and", "it", "attracts", "many", "tourists", "every", "year"
+  ]
+},
+{
+  japanese: "体調不良でしばらく休んでいたので職場に復帰してから新しいプロジェクトの進捗を把握するのが大変でした。",
+  english: "I had been out sick for a while so after returning to the office it was challenging to catch up on the progress of the new project",
+  words: [
+    "I", "had", "been", "out", "sick", "for", "a", "while", "so",
+    "after", "returning", "to", "the", "office", "it", "was",
+    "challenging", "to", "catch", "up", "on", "the", "progress",
+    "of", "the", "new", "project"
+  ]
+},
+{
+  japanese: "A: 旅行の計画は進んでいますか？ B: はい、目的地は決まったんですがまだホテルの予約が取れていないんですよ。",
+  english: "A How is your travel plan going B Well I decided on the destination but I have not booked a hotel yet",
+  words: [
+    "A", "How", "is", "your", "travel", "plan", "going", "B",
+    "Well", "I", "decided", "on", "the", "destination", "but",
+    "I", "have", "not", "booked", "a", "hotel", "yet"
+  ]
+},
+{
+  japanese: "一度引っ越しをするときに荷物を最小限に抑えようと心に決めたのに、いつのまにか部屋が物だらけになっていました。",
+  english: "When I moved once I promised myself to keep my belongings to a minimum but before I knew it the room was filled with stuff again",
+  words: [
+    "When", "I", "moved", "once", "I", "promised", "myself", "to",
+    "keep", "my", "belongings", "to", "a", "minimum", "but", "before",
+    "I", "knew", "it", "the", "room", "was", "filled", "with", "stuff",
+    "again"
+  ]
+},
+{
+  japanese: "今週末にはオンラインゲームの友人と初めて直接会う予定でとてもわくわくしていますが少し緊張もしています。",
+  english: "I am excited to finally meet my online gaming friends in person this weekend but I am also a bit nervous",
+  words: [
+    "I", "am", "excited", "to", "finally", "meet", "my", "online",
+    "gaming", "friends", "in", "person", "this", "weekend", "but",
+    "I", "am", "also", "a", "bit", "nervous"
+    ]
+},
+{
+  japanese: "ゴールデンウィーク中は毎日仕事だったけれど、最終日に友人とロードトリップへ出かけて山の麓にある秘湯を見つけたときは本当に感動しました。自然を満喫できて、普段の疲れが一気に吹き飛んだ気がします。",
+  english: "Even though I had to work every day during Golden Week on the final day I went on a road trip with a friend and felt truly moved when we discovered a hidden hot spring at the foot of the mountain I was able to enjoy nature and it felt like all my usual fatigue disappeared at once",
+  words: [
+    "Even","though","I","had","to","work","every","day","during","Golden","Week","on",
+    "the","final","day","I","went","on","a","road","trip","with","a","friend","and",
+    "felt","truly","moved","when","we","discovered","a","hidden","hot","spring","at",
+    "the","foot","of","the","mountain","I","was","able","to","enjoy","nature","and",
+    "it","felt","like","all","my","usual","fatigue","disappeared","at","once"
+  ]
+},
+{
+  japanese: "大学で経済学を専攻していた頃は、理論ばかり勉強して実践的な面に触れる機会が少なかったので、卒業後に起業家のセミナーに参加して初めてビジネスの現場の面白さを実感しました。",
+  english: "When I majored in economics at university I mainly studied theories and had few chances to see practical aspects so after graduation I attended an entrepreneur seminar and realized for the first time how fascinating real business can be",
+  words: [
+    "When","I","majored","in","economics","at","university","I","mainly","studied",
+    "theories","and","had","few","chances","to","see","practical","aspects","so",
+    "after","graduation","I","attended","an","entrepreneur","seminar","and","realized",
+    "for","the","first","time","how","fascinating","real","business","can","be"
+  ]
+},
+{
+  japanese: "A: 初めての海外ボランティアに参加してみてどうでしたか？ B: 言葉の壁が思ったよりも高かったんですが、現地の人たちの協力のおかげで何とか乗り越えられて、本当に貴重な経験になりました。",
+  english: "A How was your first experience joining an overseas volunteer program B The language barrier was higher than I expected but thanks to the cooperation of the local people I managed to overcome it and it became a truly valuable experience",
+  words: [
+    "A","How","was","your","first","experience","joining","an","overseas","volunteer","program",
+    "B","The","language","barrier","was","higher","than","I","expected","but","thanks","to",
+    "the","cooperation","of","the","local","people","I","managed","to","overcome","it","and",
+    "it","became","a","truly","valuable","experience"
+  ]
+},
+{
+  japanese: "私は幼い頃からピアノを習っていたのですが、本格的に作曲を始めたのは大学に入ってからで、最初は誰にも聞かせられないような出来でしたが、練習を重ねるうちに少しずつ自信がついてきました。",
+  english: "I had taken piano lessons since I was a child but I started composing seriously only after entering college at first my work was not good enough to show anyone but as I kept practicing I gradually gained confidence",
+  words: [
+    "I","had","taken","piano","lessons","since","I","was","a","child","but","I","started",
+    "composing","seriously","only","after","entering","college","at","first","my","work",
+    "was","not","good","enough","to","show","anyone","but","as","I","kept","practicing",
+    "I","gradually","gained","confidence"
+  ]
+},
+{
+  japanese: "最近はテレワークが増えて通勤時間が減ったおかげで生活にゆとりが生まれ、一日一時間でも読書に充てられるようになって、自己啓発や趣味の分野の知識を深められています。",
+  english: "Recently I have been working remotely more often and as my commute time has decreased I have more flexibility in my life which allows me to spend even one hour a day reading and deepen my knowledge in self improvement and hobbies",
+  words: [
+    "Recently","I","have","been","working","remotely","more","often","and","as","my","commute",
+    "time","has","decreased","I","have","more","flexibility","in","my","life","which","allows",
+    "me","to","spend","even","one","hour","a","day","reading","and","deepen","my","knowledge",
+    "in","self","improvement","and","hobbies"
+  ]
+},
+{
+  japanese: "A: 来月から始まる新しいドラマを観るつもりですか？ B: ええ、キャストが豪華でストーリーも面白そうなので毎週欠かさず見ようと思っていますが、もし見逃してしまったら配信サービスで追いかけるつもりです。",
+  english: "A Are you going to watch the new drama starting next month B Yes the cast is amazing and the story sounds interesting so I plan to watch it every week but if I miss an episode I will catch up on a streaming service",
+  words: [
+    "A","Are","you","going","to","watch","the","new","drama","starting","next","month",
+    "B","Yes","the","cast","is","amazing","and","the","story","sounds","interesting","so",
+    "I","plan","to","watch","it","every","week","but","if","I","miss","an","episode","I",
+    "will","catch","up","on","a","streaming","service"
+  ]
+},
+{
+  japanese: "社会人になってから初めての長期休暇を利用して、昔から憧れていたヨーロッパ各国を電車で巡る旅に出ました。言葉の問題やカルチャーショックもありましたが、それ以上に得るものが多く、とても充実した時間でした。",
+  english: "After becoming a working adult I used my first long vacation to travel around various European countries by train which I had always dreamed of there were language issues and culture shock but I gained so much more than I expected and the experience was very fulfilling",
+  words: [
+    "After","becoming","a","working","adult","I","used","my","first","long","vacation","to","travel",
+    "around","various","European","countries","by","train","which","I","had","always","dreamed","of",
+    "there","were","language","issues","and","culture","shock","but","I","gained","so","much","more",
+    "than","I","expected","and","the","experience","was","very","fulfilling"
+  ]
+},
+{
+  japanese: "A: 新しいプロジェクトの進捗はどうですか？ B: いろいろ試行錯誤していますが、まだ思うような成果が出せなくて、来週の会議までに少しでも形にしたいと思っています。",
+  english: "A How is the new project progressing B We are trying various approaches but have not achieved the desired results yet and we hope to have something concrete before next week's meeting",
+  words: [
+    "A","How","is","the","new","project","progressing","B","We","are","trying","various","approaches",
+    "but","have","not","achieved","the","desired","results","yet","and","we","hope","to","have",
+    "something","concrete","before","next","week's","meeting"
+  ]
+},
+{
+  japanese: "小さい頃からお菓子作りが好きだった私は、毎週末に新しいレシピを試しては家族に味見をしてもらっていますが、いつかは自分のカフェを持ちたいという夢を密かに抱いています。",
+  english: "I have loved making sweets since I was little and every weekend I try a new recipe and let my family taste it but secretly I dream of having my own cafe one day",
+  words: [
+    "I","have","loved","making","sweets","since","I","was","little","and","every","weekend","I","try",
+    "a","new","recipe","and","let","my","family","taste","it","but","secretly","I","dream","of","having",
+    "my","own","cafe","one","day"
+  ]
+},
+{
+  japanese: "A: 今度の学会でスピーチをすることになったって聞いたけど大丈夫？ B: 正直まだ原稿も半分しか書けていないし、質疑応答に耐えられるか不安だけど、これを機に自分の研究をしっかりアピールしたいと思っているんだ。",
+  english: "A I heard you are going to give a speech at the upcoming conference are you ready B Honestly I have only written about half of my draft and I am worried about handling the Q and A session but this is a good opportunity to showcase my research",
+  words: [
+    "A","I","heard","you","are","going","to","give","a","speech","at","the","upcoming","conference",
+    "are","you","ready","B","Honestly","I","have","only","written","about","half","of","my","draft",
+    "and","I","am","worried","about","handling","the","Q","and","A","session","but","this","is","a",
+    "good","opportunity","to","showcase","my","research"
+  ]
+},
+{
+  japanese: "空港までのシャトルバスはどこで乗ればいいですか？",
+  english: "Where can I catch the shuttle bus to the airport",
+  words: ["Where", "can", "I", "catch", "the", "shuttle", "bus", "to", "the", "airport"]
+},
+{
+  japanese: "すみません、近くにATMはありますか？現金が足りないんです。",
+  english: "Excuse me is there an ATM nearby I am running low on cash",
+  words: ["Excuse", "me", "is", "there", "an", "ATM", "nearby", "I", "am", "running", "low", "on", "cash"]
+},
+{
+  japanese: "両替したいのですが、どこがお得でしょうか？",
+  english: "I want to exchange my currency which place offers the best rate",
+  words: ["I", "want", "to", "exchange", "my", "currency", "which", "place", "offers", "the", "best", "rate"]
+},
+{
+  japanese: "ホテルの部屋に金庫はありますか？貴重品を入れたいんです。",
+  english: "Does the hotel room have a safe I would like to store my valuables",
+  words: ["Does", "the", "hotel", "room", "have", "a", "safe", "I", "would", "like", "to", "store", "my", "valuables"]
+},
+{
+  japanese: "タクシーでクレジットカードは使えますか、それとも現金だけですか？",
+  english: "Can I use a credit card in the taxi or is it cash only",
+  words: ["Can", "I", "use", "a", "credit", "card", "in", "the", "taxi", "or", "is", "it", "cash", "only"]
+},
+{
+  japanese: "おすすめの地元料理を教えてください。せっかくなので挑戦したいです。",
+  english: "Please tell me about local dishes you recommend I want to try something special",
+  words: ["Please", "tell", "me", "about", "local", "dishes", "you", "recommend", "I", "want", "to", "try", "something", "special"]
+},
+{
+  japanese: "チェックイン前に荷物を預けられる場所はありますか？",
+  english: "Is there a place I can leave my luggage before check in",
+  words: ["Is", "there", "a", "place", "I", "can", "leave", "my", "luggage", "before", "check", "in"]
+},
+{
+  japanese: "SIMカードを買いたいのですが、安くてデータ量が多いプランはありますか？",
+  english: "I want to buy a SIM card is there a cheap plan with a lot of data",
+  words: ["I", "want", "to", "buy", "a", "SIM", "card", "is", "there", "a", "cheap", "plan", "with", "a", "lot", "of", "data"]
+},
+{
+  japanese: "この周辺で夜に一人で歩いても安全でしょうか？",
+  english: "Is it safe to walk around this area at night by myself",
+  words: ["Is", "it", "safe", "to", "walk", "around", "this", "area", "at", "night", "by", "myself"]
+},
+{
+  japanese: "Wi Fiは無料ですか、それとも追加料金がかかりますか？",
+  english: "Is the Wi Fi free or is there an extra charge",
+  words: ["Is", "the", "Wi", "Fi", "free", "or", "is", "there", "an", "extra", "charge"]
+},
+{
+  japanese: "A: すみません、地下鉄の乗り換え方を教えてもらえますか？\nB: もちろんです。どこまで行く予定ですか？\nA: 〇〇駅に行きたいんですけど、どの路線に乗ればいいか分からなくて。\nB: それならこの路線に乗り換えて、3つ目の駅で降りてください。",
+  english: "A Excuse me could you tell me how to transfer to the subway B Of course where are you heading A I want to go to Shinjuku station but I am not sure which line to take B Then you should change to this line and get off at the third stop",
+  words: [
+    "A","Excuse","me","could","you","tell","me","how","to","transfer","to","the","subway",
+    "B","Of","course","where","are","you","heading","A","I","want","to","go","to","Shinjuku",
+    "station","but","I","am","not","sure","which","line","to","take","B","Then","you","should",
+    "change","to","this","line","and","get","off","at","the","third","stop"
+  ]
+},
+{
+  japanese: "A: 旅行保険にはもう加入しましたか？\nB: まだなんです。どの保険会社がいいのか迷っていて。\nA: よかったら私が使っているプランを紹介しますよ。\nB: ぜひお願いします。もしもの時に備えて安心ですよね。",
+  english: "A Have you already purchased travel insurance B Not yet I am still deciding which company to use A If you like I can recommend the plan I am using B That would be great it is good to be prepared just in case",
+  words: [
+    "A","Have","you","already","purchased","travel","insurance","B","Not","yet","I","am","still",
+    "deciding","which","company","to","use","A","If","you","like","I","can","recommend","the","plan",
+    "I","am","using","B","That","would","be","great","it","is","good","to","be","prepared","just",
+    "in","case"
+  ]
+},
+{
+  japanese: "A: クレジットカードが使えないお店もあるみたいですよ。\nB: そうなんですか？やっぱり現金を多めに持っていくべきですね。\nA: ええ、特に小さなお店や市場では現金のみのところが多いです。\nB: 分かりました。ATMを見つけたらこまめに引き出しておきます。",
+  english: "A It seems there are shops that do not accept credit cards B Really then I should bring more cash with me A Yes especially small stores and markets often only take cash B Understood I will withdraw money frequently whenever I see an ATM",
+  words: [
+    "A","It","seems","there","are","shops","that","do","not","accept","credit","cards","B","Really",
+    "then","I","should","bring","more","cash","with","me","A","Yes","especially","small","stores",
+    "and","markets","often","only","take","cash","B","Understood","I","will","withdraw","money",
+    "frequently","whenever","I","see","an","ATM"
+  ]
+},
+{
+  japanese: "A: 海外のSIMカードを買うのは初めてなんです。\nB: それならプリペイドタイプから試してみたらどうですか？\nA: なるほど、使い切ったら追加でチャージすればいいんですね。\nB: そうです。無駄がなくておすすめですよ。",
+  english: "A It is my first time buying a foreign SIM card B Then why not try a prepaid type first A I see so I can just top it up again when it runs out B Exactly there is no waste and I highly recommend it",
+  words: [
+    "A","It","is","my","first","time","buying","a","foreign","SIM","card","B","Then","why","not",
+    "try","a","prepaid","type","first","A","I","see","so","I","can","just","top","it","up","again",
+    "when","it","runs","out","B","Exactly","there","is","no","waste","and","I","highly","recommend",
+    "it"
+  ]
+},
+{
+  japanese: "A: レンタカーを借りたいんだけど、国際免許証は必要かな？\nB: 国によっては日本の免許証だけでOKな場合もあるらしいよ。\nA: そうなんだ。じゃあ事前に確認しておかないといけないね。\nB: うん、借りるときに保険内容もちゃんとチェックしておいた方が安心だよ。",
+  english: "A I would like to rent a car do I need an international driving permit B Some countries allow you to use just your Japanese license A Really I should check that in advance then B Yes also be sure to check the insurance details for peace of mind",
+  words: [
+    "A","I","would","like","to","rent","a","car","do","I","need","an","international","driving","permit",
+    "B","Some","countries","allow","you","to","use","just","your","Japanese","license","A","Really",
+    "I","should","check","that","in","advance","then","B","Yes","also","be","sure","to","check","the",
+    "insurance","details","for","peace","of","mind"
+  ]
+},
+{
+  japanese: "A: 地元の人から聞いたおすすめスポットに行ってみたいです。\nB: いいね、ガイドブックに載っていない場所ってワクワクするよね。\nA: うん、現地の人しか知らない絶景があるらしいんだ。\nB: それは楽しみだね。カメラの準備を忘れずに。",
+  english: "A I would like to visit a spot recommended by the locals B Sounds good it is exciting to see places that are not in guidebooks A Yes apparently there is an amazing view only known to local residents B That sounds fun do not forget to bring your camera",
+  words: [
+    "A","I","would","like","to","visit","a","spot","recommended","by","the","locals","B","Sounds","good",
+    "it","is","exciting","to","see","places","that","are","not","in","guidebooks","A","Yes","apparently",
+    "there","is","an","amazing","view","only","known","to","local","residents","B","That","sounds","fun",
+    "do","not","forget","to","bring","your","camera"
+  ]
+},
+{
+  japanese: "A: 飛行機に持ち込める荷物の重量制限ってどれくらいだっけ？\nB: 確かエコノミーは23kgまでで、それを超えると追加料金がかかるはずだよ。\nA: じゃあ、お土産を買いすぎないように注意しないと。\nB: うん、帰る前に荷物を一度チェックしたほうがいいかもね。",
+  english: "A How much is the weight limit for carry on baggage B I believe economy allows up to 23 kilograms and anything over that will incur extra fees A Then I should be careful not to buy too many souvenirs B Yes you might want to check your luggage once before heading home",
+  words: [
+    "A","How","much","is","the","weight","limit","for","carry","on","baggage","B","I","believe","economy",
+    "allows","up","to","23","kilograms","and","anything","over","that","will","incur","extra","fees",
+    "A","Then","I","should","be","careful","not","to","buy","too","many","souvenirs","B","Yes","you",
+    "might","want","to","check","your","luggage","once","before","heading","home"
+  ]
+},
+{
+  japanese: "A: 海外でスマホを充電する時、プラグの形状が合わないことがあるんだよね。\nB: そうそう、変換アダプターが必要かも。\nA: あと電圧が違うから対応してないと壊れる場合もあるって聞いた。\nB: だからマルチ対応の充電器を用意しておくと安心だよ。",
+  english: "A Sometimes the plug shape does not fit when charging my phone abroad B Exactly you may need a travel adapter A I also heard that devices can break if they do not support different voltages B That is why getting a multi voltage charger is safer",
+  words: [
+    "A","Sometimes","the","plug","shape","does","not","fit","when","charging","my","phone","abroad",
+    "B","Exactly","you","may","need","a","travel","adapter","A","I","also","heard","that","devices",
+    "can","break","if","they","do","not","support","different","voltages","B","That","is","why","getting",
+    "a","multi","voltage","charger","is","safer"
+  ]
+},
+{
+  japanese: "A: 旅行先で体調が悪くなったらどうすればいいんだろう？\nB: 保険会社に連絡して、近くの病院を紹介してもらうといいよ。\nA: そうか、英語での診察が不安だけど、なんとかなるかな。\nB: 通訳サービスを使える場合もあるらしいし、ジェスチャーでも結構伝わるよ。",
+  english: "A What should I do if I feel sick while traveling B You should contact your insurance company and ask for a hospital recommendation A I am worried about seeing a doctor in English but I guess I can manage B Sometimes there is an interpreter service or you can communicate with gestures",
+  words: [
+    "A","What","should","I","do","if","I","feel","sick","while","traveling","B","You","should","contact",
+    "your","insurance","company","and","ask","for","a","hospital","recommendation","A","I","am","worried",
+    "about","seeing","a","doctor","in","English","but","I","guess","I","can","manage","B","Sometimes",
+    "there","is","an","interpreter","service","or","you","can","communicate","with","gestures"
+  ]
+},
+{
+  japanese: "A: 帰りの飛行機は朝早いけど、空港までの交通手段はどうする？\nB: 前の日の夜に空港近くのホテルに泊まろうと思ってる。\nA: それなら安心だね。朝の渋滞とか気にしなくていいし。\nB: そうそう、チェックインもスムーズにできると思うから余裕があるよね。",
+  english: "A Our return flight is early in the morning how are you getting to the airport B I plan to stay at a hotel near the airport the night before A That is a relief no need to worry about traffic in the morning B Exactly and check in should be smoother so we will have some spare time",
+  words: [
+    "A","Our","return","flight","is","early","in","the","morning","how","are","you","getting","to","the","airport",
+    "B","I","plan","to","stay","at","a","hotel","near","the","airport","the","night","before",
+    "A","That","is","a","relief","no","need","to","worry","about","traffic","in","the","morning",
+    "B","Exactly","and","check","in","should","be","smoother","so","we","will","have","some","spare","time"
+  ]
+}
+
+
+
+
+];
+
+    let currentSentenceIndex = 0;
+    let currentSentence = "";
+
+    const japaneseSentence = document.getElementById("japanese-sentence");
+    const sentenceBox = document.getElementById("sentence-box");
+    const wordButtons = document.getElementById("word-buttons");
+    const feedback = document.getElementById("feedback");
+    const nextButton = document.getElementById("next-button");
+
+    // 次の文をロード
+    function loadNewSentence() {
+      nextButton.style.display = "none";
+      currentSentenceIndex = Math.floor(Math.random() * sentences.length);
+      currentSentence = "";
+
+      const sentenceData = sentences[currentSentenceIndex];
+      japaneseSentence.innerHTML = `<strong>${sentenceData.japanese}</strong>`;
+      sentenceBox.textContent = "";
+      feedback.textContent = "";
+
+      // ボタンの再生成
+      wordButtons.innerHTML = "";
+      const shuffledWords = [...sentenceData.words].sort(() => Math.random() - 0.5);
+      shuffledWords.forEach(word => {
+        const button = document.createElement("button");
+        button.textContent = word;
+        button.classList.add("word");
+        button.addEventListener("click", () => handleWordClick(word));
+        wordButtons.appendChild(button);
+      });
+    }
+
+    // 単語をクリックした時の処理
+    function handleWordClick(word) {
+      currentSentence = (currentSentence + " " + word).trim();
+      sentenceBox.textContent = currentSentence;
+
+      const sentenceData = sentences[currentSentenceIndex];
+
+      // 正解の場合
+      if (currentSentence === sentenceData.english) {
+        feedback.textContent = "正解です！\uD83C\uDF89";
+        feedback.style.color = "green";
+        nextButton.style.display = "inline-block";
+      } else if (!sentenceData.english.startsWith(currentSentence)) {
+        feedback.textContent = "間違っています。やり直してください。";
+        feedback.style.color = "red";
+        currentSentence = "";
+        sentenceBox.textContent = "";
+      } else {
+        feedback.textContent = "";
+      }
+    }
+
+    // 次に進むボタン
+    nextButton.addEventListener("click", loadNewSentence);
+
+    // 初期化
+    loadNewSentence();
+  </script>
+</body>
+</html>
