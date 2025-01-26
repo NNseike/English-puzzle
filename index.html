@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>英語文法パズル（ステップ方式・バグ対策版）</title>
+  <title>英語文法パズル（ステップ方式・効率化版）</title>
   <style>
     /* リセット */
     * {
@@ -60,6 +60,9 @@
       border: none;
       transition: background-color 0.2s, transform 0.1s;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.15); /* ボタンに影を追加 */
+      opacity: 1; /* フェードイン用 初期状態 */
+      animation-duration: 0.2s; /* アニメーション時間 (短縮) */
+      animation-fill-mode: forwards; /* アニメーション終了後、最終状態を維持 */
     }
 
     .word:hover {
@@ -67,6 +70,34 @@
       transform: scale(1.05); /* ホバー時に少し拡大 */
       box-shadow: 3px 3px 7px rgba(0,0,0,0.2); /* ホバー時に影を強める */
     }
+
+    .word.fade-out {
+      animation-name: fadeOut; /* フェードアウトアニメーション */
+    }
+
+    .word.fade-in {
+      animation-name: fadeIn; /* フェードインアニメーション */
+    }
+
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
 
     .used-up {
       background-color: #6c757d !important;
@@ -165,974 +196,898 @@
 <div class="confetti" id="confetti-container"></div>
 
 <script>
-     const sentences = [
+  　const sentences = [
   {
     japanese: "私は毎日コーヒーを飲みながら新聞を読むのが日課ですが、日曜日だけは家族と一緒に公園に行き、ボードゲームを楽しむことにしています。",
     english: "I make it a habit to drink coffee and read the newspaper every day, but on Sundays, I go to the park with my family to enjoy playing board games.",
-    words: ["i", "make", "it", "a", "habit", "to", "drink", "coffee", "and", "read", "the", "newspaper", "every", "day", "but", "on", "sundays", "i", "go", "to", "the", "park", "with", "my", "family", "to", "enjoy", "playing", "board", "games"]
   },
   {
     japanese: "昨日はとても忙しい日で、朝から昼までオンライン会議があり、午後にはジムに行き、その後友人と夕食を楽しみました。",
     english: "Yesterday was such a busy day; I had online meetings from morning until noon, went to the gym in the afternoon, and then enjoyed dinner with my friend.",
-    words: ["yesterday", "was", "such", "a", "busy", "day", "i", "had", "online", "meetings", "from", "morning", "until", "noon", "went", "to", "the", "gym", "in", "the", "afternoon", "and", "then", "enjoyed", "dinner", "with", "my", "friend"]
   },
   {
     japanese: "私は旅行が好きで、特に美しい自然や歴史的な街並みを見ることができる場所を訪れるのが大好きです。",
     english: "I love traveling, especially visiting places where I can see beautiful nature and historical cityscapes.",
-    words: ["i", "love", "traveling", "especially", "visiting", "places", "where", "i", "can", "see", "beautiful", "nature", "and", "historical", "cityscapes"]
   },
   {
     japanese: "この本は、科学者がどのように複雑な問題を解決するかについて非常に興味深い洞察を提供してくれます。",
     english: "This book provides fascinating insights into how scientists solve complex problems.",
-    words: ["this", "book", "provides", "fascinating", "insights", "into", "how", "scientists", "solve", "complex", "problems"]
   },
   {
     japanese: "将来は、地球温暖化を防ぐための解決策を研究する科学者になりたいと考えています。",
     english: "In the future, I want to become a scientist who researches solutions to prevent global warming.",
-    words: ["in", "the", "future", "i", "want", "to", "become", "a", "scientist", "who", "researches", "solutions", "to", "prevent", "global", "warming"]
   },
   {
     japanese: "私の母は料理がとても上手で、特に彼女の作るパスタ料理は家族全員のお気に入りです。",
     english: "My mother is an excellent cook, and her pasta dishes, in particular, are a favorite of the whole family.",
-    words: ["my", "mother", "is", "an", "excellent", "cook", "and", "her", "pasta", "dishes", "in", "particular", "are", "a", "favorite", "of", "the", "whole", "family"]
   },
   {
     japanese: "来年、私たちは新しい家に引っ越す予定で、その家には庭があり、ガーデニングを楽しむのが待ち遠しいです。",
     english: "Next year, we are planning to move to a new house that has a garden, and I can’t wait to enjoy gardening.",
-    words: ["next", "year", "we", "are", "planning", "to", "move", "to", "a", "new", "house", "that", "has", "a", "garden", "and", "i", "can’t", "wait", "to", "enjoy", "gardening"]
   },
   {
     japanese: "彼女は常に新しいアイデアを考え出し、問題に対して創造的な解決策を見つけるのが得意です。",
     english: "She is always coming up with new ideas and is excellent at finding creative solutions to problems.",
-    words: ["she", "is", "always", "coming", "up", "with", "new", "ideas", "and", "is", "excellent", "at", "finding", "creative", "solutions", "to", "problems"]
   },
   {
     japanese: "私たちの町では、毎年夏に大規模なお祭りが開催され、地元の人々や観光客がたくさん集まります。",
     english: "In our town, a large festival is held every summer, attracting many locals and tourists.",
-    words: ["in", "our", "town", "a", "large", "festival", "is", "held", "every", "summer", "attracting", "many", "locals", "and", "tourists"]
   },
   {
     japanese: "週末には、友人と一緒に映画を見るか、新しいレストランを試すのが私たちの楽しみです。",
     english: "On weekends, my friends and I enjoy either watching movies or trying out new restaurants.",
-    words: ["on", "weekends", "my", "friends", "and", "i", "enjoy", "either", "watching", "movies", "or", "trying", "out", "new", "restaurants"]
   },
   {
     japanese: "A: 昨日新しいカフェに行ったんだけど、すごく良かったよ。\nB: 本当に？どんな雰囲気だったの？\nA: とても落ち着いた感じで、コーヒーも美味しかった。\nB: 場所はどこ？今度一緒に行こうよ。\nA: 駅から徒歩5分くらいのところだよ。ぜひ行こう！",
     english: "A: I went to a new café yesterday, and it was amazing.\nB: Really? What was the atmosphere like?\nA: It was very relaxing, and the coffee was great.\nB: Where is it? Let's go together next time.\nA: It's about a 5-minute walk from the station. Let's definitely go!",
-    words: ["i", "went", "to", "a", "new", "café", "yesterday", "and", "it", "was", "amazing", "really", "what", "was", "the", "atmosphere", "like", "it", "was", "very", "relaxing", "and", "the", "coffee", "was", "great", "where", "is", "it", "let's", "go", "together", "next", "time", "it's", "about", "a", "5-minute", "walk", "from", "the", "station", "let's", "definitely", "go"]
   },
   {
     japanese: "A: 最近何か新しい趣味を始めた？\nB: 実はギターを始めたんだ。すごく楽しいよ。\nA: それは素晴らしい！どんな曲を弾いてるの？\nB: まだ簡単な曲だけど、練習するのが楽しい。\nA: いつか聞かせてね！",
     english: "A: Have you started any new hobbies lately?\nB: Actually, I started playing the guitar. It's so much fun.\nA: That's awesome! What kind of songs are you playing?\nB: Just simple ones for now, but practicing is really enjoyable.\nA: You have to play for me sometime!",
-    words: ["have", "you", "started", "any", "new", "hobbies", "lately", "actually", "i", "started", "playing", "the", "guitar", "it's", "so", "much", "fun", "that's", "awesome", "what", "kind", "of", "songs", "are", "you", "playing", "just", "simple", "ones", "for", "now", "but", "practicing", "is", "really", "enjoyable", "you", "have", "to", "play", "for", "me", "sometime"]
   },
   {
     japanese: "A: 昨日のパーティーどうだった？\nB: すごく楽しかったよ！たくさんの人と話した。\nA: それは良かったね！何か面白いことあった？\nB: 実は、友達が急に歌いだして、みんな大笑いしたんだ。\nA: 面白そうだね！次は私も呼んでね。",
     english: "A: How was the party yesterday?\nB: It was so much fun! I talked to a lot of people.\nA: That's great! Did anything funny happen?\nB: Actually, a friend of mine suddenly started singing, and everyone burst out laughing.\nA: That sounds hilarious! Invite me next time.",
-    words: ["how", "was", "the", "party", "yesterday", "it", "was", "so", "much", "fun", "i", "talked", "to", "a", "lot", "of", "people", "that's", "great", "did", "anything", "funny", "happen", "actually", "a", "friend", "of", "mine", "suddenly", "started", "singing", "and", "everyone", "burst", "out", "laughing", "that", "sounds", "hilarious", "invite", "me", "next", "time"]
   },
   {
     japanese: "A: 映画館に行く予定はある？\nB: 来週、新しいSF映画を見に行くつもりだよ。\nA: あれ、評判がすごくいいよね！\nB: そうそう、だからとても楽しみなんだ。\nA: じゃあ感想を教えてね！",
     english: "A: Do you have any plans to go to the movies?\nB: I'm planning to watch the new sci-fi movie next week.\nA: Oh, I've heard it's really good!\nB: Yeah, that's why I'm really excited about it.\nA: Let me know what you think!",
-    words: ["do", "you", "have", "any", "plans", "to", "go", "to", "the", "movies", "i'm", "planning", "to", "watch", "the", "new", "sci-fi", "movie", "next", "week", "oh", "i've", "heard", "it's", "really", "good", "yeah", "that's", "why", "i'm", "really", "excited", "about", "it", "let", "me", "know", "what", "you", "think"]
   },
   {
     japanese: "A: 旅行の計画はどうなってる？\nB: 来月、京都に行く予定だよ。\nA: 素晴らしい！何を見る予定？\nB: 清水寺とか嵐山とか、有名な場所を回る予定。\nA: 写真をたくさん撮ってね！",
     english: "A: How's your travel plan going?\nB: I'm planning to go to Kyoto next month.\nA: Amazing! What are you planning to see?\nB: Places like Kiyomizu Temple and Arashiyama, the famous spots.\nA: Make sure to take lots of photos!",
-    words: ["how's", "your", "travel", "plan", "going", "i'm", "planning", "to", "go", "to", "kyoto", "next", "month", "amazing", "what", "are", "you", "planning", "to", "see", "places", "like", "kiyomizu", "temple", "and", "arashiyama", "the", "famous", "spots", "make", "sure", "to", "take", "lots", "of", "photos"]
   },
   {
-    japanese: "A: 最近読んだ本でおすすめはある？\nB: 「沈黙の春」を読んだけど、環境問題についてすごく考えさせられたよ。\nA: 面白そう！今度貸してくれる？\nB: もちろん！終わったら教えてね。\nA: ありがとう！楽しみにしてるよ。",
+    japanese: "A: 最近読んだ本でおすすめはある？\nB: 「沈黙の春」を読んだけど、環境問題についてすごく考えさせられたよ。\nA: 面白そう！今度貸してくれる？\nB: もちろんです！終わったら教えてね。\nA: ありがとう！楽しみにしてるよ。",
     english: "A: Do you have any book recommendations from what you've read recently?\nB: I read 'Silent Spring,' and it really made me think about environmental issues.\nA: That sounds interesting! Can you lend it to me sometime?\nB: Of course! Just let me know when you're done.\nA: Thanks! I'm looking forward to it.",
-    words: ["do", "you", "have", "any", "book", "recommendations", "from", "what", "you've", "read", "recently", "i", "read", "silent", "spring", "and", "it", "really", "made", "me", "think", "about", "environmental", "issues", "that", "sounds", "interesting", "can", "you", "lend", "it", "to", "me", "sometime", "of", "course", "just", "let", "me", "know", "when", "you're", "done", "thanks", "i'm", "looking", "forward", "to", "it"]
   },
   {
-    japanese: "A: 昨日のサッカーの試合見た？\nB: 見たよ！最後のゴールは信じられないくらい素晴らしかったね。\nA: だよね！あの選手、本当にすごいよ。\nB: 次の試合も見逃せないね。\nA: 絶対に見るよ。一緒に観戦しよう！",
+    japanese: "A: 昨日のサッカーの試合見た？\nB: 見たよ！最後のゴールは信じられないくらい素晴らしかったね。\nA: だよね！あの選手、本当にすごいよ。\nA: 次の試合も見逃せないね。\nA: 絶対に見るよ。一緒に観戦しよう！",
     english: "A: Did you watch the soccer match yesterday?\nB: I did! That last goal was unbelievably amazing.\nA: Right? That player is truly incredible.\nB: We can't miss the next match.\nA: I'll definitely watch it. Let's watch it together!",
-    words: ["did", "you", "watch", "the", "soccer", "match", "yesterday", "i", "did", "that", "last", "goal", "was", "unbelievably", "amazing", "right", "that", "player", "is", "truly", "incredible", "we", "can't", "miss", "the", "next", "match", "i'll", "definitely", "watch", "it", "let's", "watch", "it", "together"]
   },
   {
     japanese: "A: 最近健康に気を使ってる？\nB: そうだね、週に3回はジムに行くようにしてる。\nA: すごい！どんな運動してるの？\nB: ウエイトトレーニングとランニングをしてるよ。\nA: それは良いね！私も始めようかな。",
     english: "A: Have you been taking care of your health recently?\nB: Yeah, I've been trying to go to the gym three times a week.\nA: That's great! What kind of exercises do you do?\nB: I do weight training and running.\nA: That sounds good! Maybe I should start too.",
-    words: ["have", "you", "been", "taking", "care", "of", "your", "health", "recently", "yeah", "i've", "been", "trying", "to", "go", "to", "the", "gym", "three", "times", "a", "week", "that's", "great", "what", "kind", "of", "exercises", "do", "you", "do", "i", "do", "weight", "training", "and", "running", "that", "sounds", "good", "maybe", "i", "should", "start", "too"]
   },
   {
     japanese: "A: この週末、何か予定ある？\nB: 特にないけど、のんびりしようかなと思ってる。\nA: それなら新しいカフェに行かない？\nB: 良いね！どこにあるの？\nA: 駅の近くだよ。行ってみよう！",
     english: "A: Do you have any plans for this weekend?\nB: Not really, but I'm thinking of just relaxing.\nA: Then how about checking out a new café?\nB: Sounds good! Where is it?\nA: It's near the station. Let's go check it out!",
-    words: ["do", "you", "have", "any", "plans", "for", "this", "weekend", "not", "really", "but", "i'm", "thinking", "of", "just", "relaxing", "then", "how", "about", "checking", "out", "a", "new", "café", "sounds", "good", "where", "is", "it", "it's", "near", "the", "station", "let's", "go", "check", "it", "out"]
   },
   {
     japanese: "A: 最近、何か面白い映画見た？\nB: 「インセプション」を見たけど、頭を使う映画だったよ。\nA: ああ、あれはいいよね！私も大好き。\nB: 本当に？次は一緒に映画館に行こう。\nA: ぜひ行こう！楽しみだね。",
     english: "A: Have you watched any interesting movies recently?\nB: I watched 'Inception,' and it was a real brain teaser.\nA: Oh, that's a great one! I love it too.\nB: Really? Let's go to the cinema together next time.\nA: Definitely! I'm looking forward to it.",
-    words: ["have", "you", "watched", "any", "interesting", "movies", "recently", "i", "watched", "inception", "and", "it", "was", "a", "real", "brain", "teaser", "oh", "that's", "a", "great", "one", "i", "love", "it", "too", "really", "let's", "go", "to", "the", "cinema", "together", "next", "time", "definitely", "i'm", "looking", "forward", "to", "it"]
   },
   {
     japanese: "A: この近くに良いレストランはありますか？\nB: はい、徒歩5分のところに素晴らしいイタリアンレストランがあります。\nA: それは良いですね！名前を教えてもらえますか？\nB: もちろんです。『トラットリア・マリオ』です。\nA: ありがとう！早速行ってみます。",
     english: "A: Is there a good restaurant near here?\nB: Yes, there is a great Italian restaurant about a 5-minute walk from here.\nA: That sounds great! Can you tell me the name?\nB: Sure, it's called 'Trattoria Mario.'\nA: Thank you! I'll check it out right away.",
-    words: ["is", "there", "a", "good", "restaurant", "near", "here", "yes", "there", "is", "a", "great", "italian", "restaurant", "about", "a", "5-minute", "walk", "from", "here", "that", "sounds", "great", "can", "you", "tell", "me", "the", "name", "sure", "it's", "called", "trattoria", "mario", "thank", "you", "i'll", "check", "it", "out", "right", "away"]
   },
   {
     japanese: "A: タクシーで空港までどのくらいかかりますか？\nB: 大体30分くらいです。ただ、渋滞があると少し時間がかかるかもしれません。\nA: わかりました。料金はどれくらいですか？\nB: 大体40ドルほどです。\nA: ありがとう！今すぐタクシーを呼んでもらえますか？",
     english: "A: How long does it take to get to the airport by taxi?\nB: It takes about 30 minutes, but it might take a bit longer if there's traffic.\nA: Got it. How much does it cost?\nB: It's about 40 dollars.\nA: Thanks! Could you call a taxi for me now?",
-    words: ["how", "long", "does", "it", "take", "to", "get", "to", "the", "airport", "by", "taxi", "it", "takes", "about", "30", "minutes", "but", "it", "might", "take", "a", "bit", "longer", "if", "there's", "traffic", "got", "it", "how", "much", "does", "it", "cost", "it's", "about", "40", "dollars", "thanks", "could", "you", "call", "a", "taxi", "for", "me", "now"]
   },
   {
     japanese: "A: この列車は何時に出発しますか？\nB: 午後2時ちょうどに出発します。\nA: チケットはどこで買えますか？\nB: 駅の窓口か自動券売機で購入できます。\nA: ありがとう！",
     english: "A: What time does this train leave?\nB: It leaves at 2 PM sharp.\nA: Where can I buy tickets?\nB: You can purchase them at the ticket counter or the vending machine.\nA: Thank you!",
-    words: ["what", "time", "does", "this", "train", "leave", "it", "leaves", "at", "2", "pm", "sharp", "where", "can", "i", "buy", "tickets", "you", "can", "purchase", "them", "at", "the", "ticket", "counter", "or", "the", "vending", "machine", "thank", "you"]
   },
   {
     japanese: "A: このホテルにチェックインしたいのですが。\nB: もちろんです。予約番号を教えていただけますか？\nA: はい、これが予約確認書です。\nB: 確認しました。お部屋は5階です。\nA: ありがとう！",
     english: "A: I'd like to check into this hotel.\nB: Of course. Could you provide your reservation number?\nA: Sure, here is my booking confirmation.\nB: Got it. Your room is on the 5th floor.\nA: Thank you!",
-    words: ["i'd", "like", "to", "check", "into", "this", "hotel", "of", "course", "could", "you", "provide", "your", "reservation", "number", "sure", "here", "is", "my", "booking", "confirmation", "got", "it", "your", "room", "is", "on", "the", "5th", "floor", "thank", "you"]
   },
   {
     japanese: "A: 観光地の地図はありますか？\nB: こちらにあります。主要なスポットが載っています。\nA: これは無料ですか？\nB: はい、無料です。\nA: ありがとう！これで観光を楽しめそうです。",
     english: "A: Do you have a map of tourist attractions?\nB: Here it is. It includes the main spots.\nA: Is this free?\nB: Yes, it's free.\nA: Thanks! This will make my sightseeing more enjoyable.",
-    words: ["do", "you", "have", "a", "map", "of", "tourist", "attractions", "here", "it", "is", "it", "includes", "the", "main", "spots", "is", "this", "free", "yes", "it's", "free", "thanks", "this", "will", "make", "my", "sightseeing", "more", "enjoyable"]
   },
   {
     japanese: "A: クレジットカードは使えますか？\nB: はい、VisaとMastercardがご利用いただけます。\nA: それは助かります！現金をあまり持っていないので。\nB: 問題ありません。どうぞお使いください。\nA: ありがとうございます。",
     english: "A: Can I use a credit card here?\nB: Yes, we accept Visa and Mastercard.\nA: That’s helpful! I don’t have much cash on me.\nB: No problem at all. Please feel free to use it.\nA: Thank you.",
-    words: ["can", "i", "use", "a", "credit", "card", "here", "yes", "we", "accept", "visa", "and", "mastercard", "that’s", "helpful", "i", "don’t", "have", "much", "cash", "on", "me", "no", "problem", "at", "all", "please", "feel", "free", "to", "use", "it", "thank", "you"]
   },
   {
     japanese: "A: 空港でWi-Fiは使えますか？\nB: はい、無料のWi-Fiがあります。ネットワーク名は『FreeAirportWiFi』です。\nA: パスワードは必要ですか？\nB: いいえ、必要ありません。\nA: ありがとう！",
     english: "A: Is Wi-Fi available at the airport?\nB: Yes, there is free Wi-Fi. The network name is 'FreeAirportWiFi.'\nA: Do I need a password?\nB: No, you don’t.\nA: Thank you!",
-    words: ["is", "wi-fi", "available", "at", "the", "airport", "yes", "there", "is", "free", "wi-fi", "the", "network", "name", "is", "freeairportwifi", "do", "i", "need", "a", "password", "no", "you", "don’t", "thank", "you"]
   },
   {
     japanese: "A: この博物館の入場料はいくらですか？\nB: 大人は10ドル、子供は5ドルです。\nA: クレジットカードで支払いはできますか？\nB: はい、できます。\nA: わかりました。大人2人分をお願いします。",
     english: "A: How much is the admission fee for this museum?\nB: It’s $10 for adults and $5 for children.\nA: Can I pay by credit card?\nB: Yes, you can.\nA: Alright, I’d like two adult tickets, please.",
-    words: ["how", "much", "is", "the", "admission", "fee", "for", "this", "museum", "it’s", "10", "for", "adults", "and", "5", "for", "children", "can", "i", "pay", "by", "credit", "card", "yes", "you", "can", "alright", "i’d", "like", "two", "adult", "tickets", "please"]
   },
   {
     japanese: "A: おすすめのお土産はありますか？\nB: 地元の特産品として、このクッキーが人気です。\nA: 美味しそうですね！試食できますか？\nB: もちろんです。こちらをどうぞ。\nA: ありがとう！買います。",
     english: "A: Do you have any recommendations for souvenirs?\nB: These cookies are popular as a local specialty.\nA: They look delicious! Can I try one?\nB: Of course. Here you go.\nA: Thanks! I’ll buy them.",
-    words: ["do", "you", "have", "any", "recommendations", "for", "souvenirs", "these", "cookies", "are", "popular", "as", "a", "local", "specialty", "they", "look", "delicious", "can", "i", "try", "one", "of", "course", "here", "you", "go", "thanks", "i’ll", "buy", "them"]
   },
   {
     japanese: "A: 空港バスの乗り場はどこですか？\nB: 3番出口のすぐ外にあります。\nA: チケットはどこで買えますか？\nB: バスの運転手から直接購入できます。\nA: ありがとう！",
     english: "A: Where is the airport bus stop?\nB: It’s just outside Exit 3.\nA: Where can I buy tickets?\nB: You can buy them directly from the bus driver.\nA: Thank you!",
-    words: ["where", "is", "the", "airport", "bus", "stop", "it’s", "just", "outside", "exit", "3", "where", "can", "i", "buy", "tickets", "you", "can", "buy", "them", "directly", "from", "the", "bus", "driver", "thank", "you"]
   },
   {
     japanese: "私は毎朝7時に起きます。",
     english: "I wake up at 7 o'clock every morning.",
-    words: ["i", "wake", "up", "at", "7", "o'clock", "every", "morning"]
   },
   {
     japanese: "彼は毎週金曜日にテニスをします。",
     english: "He plays tennis every Friday.",
-    words: ["he", "plays", "tennis", "every", "friday"]
   },
   {
     japanese: "私たちは昨夜映画を見ました。",
     english: "We watched a movie last night.",
-    words: ["we", "watched", "a", "movie", "last", "night"]
   },
   {
     japanese: "彼女は今、本を読んでいます。",
     english: "She is reading a book right now.",
-    words: ["she", "is", "reading", "a", "book", "right", "now"]
   },
   {
     japanese: "私は次の月曜日に友達に会う予定です。",
     english: "I am going to meet my friend next Monday.",
-    words: ["i", "am", "going", "to", "meet", "my", "friend", "next", "monday"]
   },
   {
     japanese: "彼らは学校にバスで行きます。",
     english: "They go to school by bus.",
-    words: ["they", "go", "to", "school", "by", "bus"]
   },
   {
     japanese: "私は新しいカメラを買いたいと思っています。",
     english: "I want to buy a new camera.",
-    words: ["i", "want", "to", "buy", "a", "new", "camera"]
   },
   {
     japanese: "私の兄は大学で数学を勉強しています。",
     english: "My brother studies mathematics at university.",
-    words: ["my", "brother", "studies", "mathematics", "at", "university"]
   },
   {
     japanese: "そのレストランは10時に閉まります。",
     english: "The restaurant closes at 10 o'clock.",
-    words: ["the", "restaurant", "closes", "at", "10", "o'clock"]
   },
   {
     japanese: "私はコーヒーより紅茶が好きです。",
     english: "I like tea more than coffee.",
-    words: ["i", "like", "tea", "more", "than", "coffee"]
   },
   {
     japanese: "天気が良いので散歩に行きましょう。",
     english: "Since the weather is nice, let's go for a walk.",
-    words: ["since", "the", "weather", "is", "nice", "let's", "go", "for", "a", "walk"]
   },
   {
     japanese: "次の電車は何時に出発しますか？",
     english: "What time does the next train leave?",
-    words: ["what", "time", "does", "the", "next", "train", "leave"]
   },
   {
     japanese: "私は料理が得意ではありませんが、挑戦するのが好きです。",
     english: "I am not good at cooking, but I enjoy trying.",
-    words: ["i", "am", "not", "good", "at", "cooking", "but", "i", "enjoy", "trying"]
   },
   {
     japanese: "彼女は日本語とフランス語を話すことができます。",
     english: "She can speak Japanese and French.",
-    words: ["she", "can", "speak", "japanese", "and", "french"]
   },
   {
     japanese: "私は明日の会議のために資料を準備しています。",
     english: "I am preparing materials for tomorrow's meeting.",
-    words: ["i", "am", "preparing", "materials", "for", "tomorrow's", "meeting"]
   },
   {
     japanese: "あの映画は評判が良いので、見る価値があります。",
     english: "That movie has a good reputation, so it's worth watching.",
-    words: ["that", "movie", "has", "a", "good", "reputation", "so", "it's", "worth", "watching"]
   },
   {
     japanese: "この問題を解決するために、何か良いアイデアはありますか？",
     english: "Do you have any good ideas to solve this problem?",
-    words: ["do", "you", "have", "any", "good", "ideas", "to", "solve", "this", "problem"]
   },
   {
     japanese: "私は将来、世界中を旅してみたいです。",
     english: "In the future, I would like to travel around the world.",
-    words: ["in", "the", "future", "i", "would", "like", "to", "travel", "around", "the", "world"]
   },
   {
     japanese: "駅に行く最短の道を教えていただけますか？",
     english: "Can you tell me the shortest way to the station?",
-    words: ["can", "you", "tell", "me", "the", "shortest", "way", "to", "the", "station"]
   },
   {
     japanese: "彼はそのプロジェクトを成功させるために一生懸命働いています。",
     english: "He is working hard to make the project successful.",
-    words: ["he", "is", "working", "hard", "to", "make", "the", "project", "successful"]
   },
   {
     japanese: "彼は新しい映画を見たことがありますか？",
     english: "Has he watched the new movie?",
-    words: ["has", "he", "watched", "the", "new", "movie"]
   },
   {
     japanese: "あなたは最近何か面白い本を読みましたか？",
     english: "Have you read any interesting books lately?",
-    words: ["have", "you", "read", "any", "interesting", "books", "lately"]
   },
   {
     japanese: "このプロジェクトは終わりそうにありません。",
     english: "This project doesn't seem like it will end.",
-    words: ["this", "project", "doesn't", "seem", "like", "it", "will", "end"]
   },
   {
     japanese: "彼女はそのイベントに来る予定ですか？",
     english: "Is she coming to the event?",
-    words: ["is", "she", "coming", "to", "the", "event"]
   },
   {
     japanese: "私たちは彼のアイデアを完全に理解していません。",
     english: "We don’t fully understand his idea.",
-    words: ["we", "don’t", "fully", "understand", "his", "idea"]
   },
   {
     japanese: "あなたはその会議に参加する予定ですか？",
     english: "Are you planning to join the meeting?",
-    words: ["are", "you", "planning", "to", "join", "the", "meeting"]
   },
   {
     japanese: "彼らはそのニュースについて知っていると思いますか？",
     english: "Do you think they know about the news?",
-    words: ["do", "you", "think", "they", "know", "about", "the", "news"]
   },
   {
     japanese: "私は彼が言ったことを信じていません。",
     english: "I don’t believe what he said.",
-    words: ["i", "don’t", "believe", "what", "he", "said"]
   },
   {
     japanese: "彼女はこの町に住んでいますよね？",
     english: "She lives in this town, doesn’t she?",
-    words: ["she", "lives", "in", "this", "town", "doesn’t", "she"]
   },
   {
     japanese: "これが最後のチャンスだと思いませんか？",
     english: "Don’t you think this is the last chance?",
-    words: ["don’t", "you", "think", "this", "is", "the", "last", "chance"]
   },
   {
     japanese: "私は今朝からずっとこの問題に取り組んでいます。",
     english: "I have been working on this problem since this morning.",
-    words: ["i", "have", "been", "working", "on", "this", "problem", "since", "this", "morning"]
   },
   {
     japanese: "彼女はその本を昨日読み終えました。",
     english: "She finished reading the book yesterday.",
-    words: ["she", "finished", "reading", "the", "book", "yesterday"]
   },
   {
     japanese: "彼らは次の週末に新しい家に引っ越す予定です。",
     english: "They are moving to a new house next weekend.",
-    words: ["they", "are", "moving", "to", "a", "new", "house", "next", "weekend"]
   },
   {
     japanese: "私たちは来月旅行に行くつもりです。",
     english: "We are going to travel next month.",
-    words: ["we", "are", "going", "to", "travel", "next", "month"]
   },
   {
     japanese: "私はすでに昼食を食べました。",
     english: "I have already had lunch.",
-    words: ["i", "have", "already", "had", "lunch"]
   },
   {
     japanese: "明日のこの時間、私はプレゼンテーションをしているでしょう。",
     english: "At this time tomorrow, I will be giving a presentation.",
-    words: ["at", "this", "time", "tomorrow", "i", "will", "be", "giving", "a", "presentation"]
   },
   {
     japanese: "彼はその本を5回も読んだことがあります。",
     english: "He has read that book five times.",
-    words: ["he", "has", "read", "that", "book", "five", "times"]
   },
   {
     japanese: "このプロジェクトは来週までには完了しているはずです。",
     english: "This project will have been completed by next week.",
-    words: ["this", "project", "will", "have", "been", "completed", "by", "next", "week"]
   },
   {
     japanese: "彼女はずっとピアノを弾いています。",
     english: "She has been playing the piano.",
-    words: ["she", "has", "been", "playing", "the", "piano"]
   },
   {
     japanese: "私は先週から新しい仕事を始めました。",
     english: "I started a new job last week.",
-    words: ["i", "started", "a", "new", "job", "last", "week"]
   },
   {
     japanese: "もし私があなたなら、その仕事を引き受けます。",
     english: "If I were you, I would take the job.",
-    words: ["if", "i", "were", "you", "i", "would", "take", "the", "job"]
   },
   {
     japanese: "雨が降らなければ、ピクニックに行きましょう。",
     english: "If it doesn't rain, let's go for a picnic.",
-    words: ["if", "it", "doesn't", "rain", "let's", "go", "for", "a", "picnic"]
   },
   {
     japanese: "もっと早く出発していれば、電車に間に合ったかもしれません。",
     english: "If we had left earlier, we might have caught the train.",
-    words: ["if", "we", "had", "left", "earlier", "we", "might", "have", "caught", "the", "train"]
   },
   {
     japanese: "十分なお金があれば、その家を買いたいです。",
     english: "If I had enough money, I would buy that house.",
-    words: ["if", "i", "had", "enough", "money", "i", "would", "buy", "that", "house"]
   },
   {
     japanese: "もっと時間があれば、旅行に行くのに。",
     english: "If I had more time, I would go on a trip.",
-    words: ["if", "i", "had", "more", "time", "i", "would", "go", "on", "a", "trip"]
   },
   {
     japanese: "彼が手伝ってくれれば、もっと早く終わるでしょう。",
     english: "If he helps us, we will finish sooner.",
-    words: ["if", "he", "helps", "us", "we", "will", "finish", "sooner"]
   },
   {
     japanese: "もし努力しなければ、目標を達成できません。",
     english: "If you don't make an effort, you can't achieve your goals.",
-    words: ["if", "you", "don't", "make", "an", "effort", "you", "can't", "achieve", "your", "goals"]
   },
   {
     japanese: "もっと勉強していたら、試験に合格していただろうに。",
     english: "If I had studied harder, I would have passed the exam.",
-    words: ["if", "i", "had", "studied", "harder", "i", "would", "have", "passed", "the", "exam"]
   },
   {
     japanese: "時間があれば手伝えるのに。",
     english: "If I had the time, I could help you.",
-    words: ["if", "i", "had", "the", "time", "i", "could", "help", "you"]
   },
   {
     japanese: "彼女が招待してくれたら、パーティーに行くでしょう。",
     english: "If she invites me, I will go to the party.",
-    words: ["if", "she", "invites", "me", "i", "will", "go", "to", "the", "party"]
   },
   {
     japanese: "この本はあの本よりも面白いです。",
     english: "This book is more interesting than that one.",
-    words: ["this", "book", "is", "more", "interesting", "than", "that", "one"]
   },
   {
     japanese: "彼はクラスで最も背が高い生徒です。",
     english: "He is the tallest student in the class.",
-    words: ["he", "is", "the", "tallest", "student", "in", "the", "class"]
   },
   {
     japanese: "このコーヒーは紅茶よりも強い味がします。",
     english: "This coffee tastes stronger than tea.",
-    words: ["this", "coffee", "tastes", "stronger", "than", "tea"]
   },
   {
     japanese: "このレストランは町で一番人気があります。",
     english: "This restaurant is the most popular in town.",
-    words: ["this", "restaurant", "is", "the", "most", "popular", "in", "town"]
   },
   {
     japanese: "今日の天気は昨日よりも暑いです。",
     english: "The weather today is hotter than yesterday.",
-    words: ["the", "weather", "today", "is", "hotter", "than", "yesterday"]
   },
   {
     japanese: "彼女の歌声は私の声よりも美しいです。",
     english: "Her singing voice is more beautiful than mine.",
-    words: ["her", "singing", "voice", "is", "more", "beautiful", "than", "mine"]
   },
   {
     japanese: "この映画はこれまで見た中で最高の映画です。",
     english: "This is the best movie I have ever seen.",
-    words: ["this", "is", "the", "best", "movie", "i", "have", "ever", "seen"]
   },
   {
     japanese: "彼は兄弟の中で一番速く走ることができます。",
     english: "He can run the fastest among his siblings.",
-    words: ["he", "can", "run", "the", "fastest", "among", "his", "siblings"]
   },
   {
     japanese: "この問題は他のどの問題よりも難しいです。",
     english: "This problem is more difficult than any other problem.",
-    words: ["this", "problem", "is", "more", "difficult", "than", "any", "other", "problem"]
   },
   {
     japanese: "このホテルは街の他のホテルよりも高価です。",
     english: "This hotel is more expensive than other hotels in the city.",
-    words: ["this", "hotel", "is", "more", "expensive", "than", "other", "hotels", "in", "the", "city"]
   },
   {
     japanese: "この部屋は毎日掃除されます。",
     english: "This room is cleaned every day.",
-    words: ["this", "room", "is", "cleaned", "every", "day"]
   },
   {
     japanese: "その手紙は昨日彼によって書かれました。",
     english: "The letter was written by him yesterday.",
-    words: ["the", "letter", "was", "written", "by", "him", "yesterday"]
   },
   {
     japanese: "この本は多くの学生に読まれています。",
     english: "This book is read by many students.",
-    words: ["this", "book", "is", "read", "by", "many", "students"]
   },
   {
     japanese: "新しいショッピングモールが建設されています。",
     english: "A new shopping mall is being built.",
-    words: ["a", "new", "shopping", "mall", "is", "being", "built"]
   },
   {
     japanese: "そのプレゼントは彼女に渡されました。",
     english: "The gift was given to her.",
-    words: ["the", "gift", "was", "given", "to", "her"]
   },
   {
     japanese: "その家は去年売られました。",
     english: "The house was sold last year.",
-    words: ["the", "house", "was", "sold", "last", "year"]
   },
   {
     japanese: "この写真はプロのカメラマンによって撮影されました。",
     english: "This photo was taken by a professional photographer.",
-    words: ["this", "photo", "was", "taken", "by", "a", "professional", "photographer"]
   },
   {
     japanese: "その問題はまだ解決されていません。",
     english: "The issue has not been solved yet.",
-    words: ["the", "issue", "has", "not", "been", "solved", "yet"]
   },
   {
     japanese: "この映画はたくさんの人に愛されています。",
     english: "This movie is loved by many people.",
-    words: ["this", "movie", "is", "loved", "by", "many", "people"]
   },
   {
     japanese: "新しいルールがすべての社員に通知されました。",
     english: "The new rules were announced to all employees.",
-    words: ["the", "new", "rules", "were", "announced", "to", "all", "employees"]
   },
   {
     japanese: "これは私が昨日買った本です。",
     english: "This is the book that I bought yesterday.",
-    words: ["this", "is", "the", "book", "that", "i", "bought", "yesterday"]
   },
   {
     japanese: "彼女が住んでいる家はとても大きいです。",
     english: "The house where she lives is very big.",
-    words: ["the", "house", "where", "she", "lives", "is", "very", "big"]
   },
   {
     japanese: "私が話した男性は医者です。",
     english: "The man whom I spoke to is a doctor.",
-    words: ["the", "man", "whom", "i", "spoke", "to", "is", "a", "doctor"]
   },
   {
     japanese: "私が好きな映画は『インセプション』です。",
     english: "The movie that I like is 'Inception.'",
-    words: ["the", "movie", "that", "i", "like", "is", "inception"]
   },
   {
     japanese: "彼が働いている会社は有名です。",
     english: "The company where he works is famous.",
-    words: ["the", "company", "where", "he", "works", "is", "famous"]
   },
   {
     japanese: "私たちが訪れた場所はとても美しかったです。",
     english: "The place we visited was very beautiful.",
-    words: ["the", "place", "we", "visited", "was", "very", "beautiful"]
   },
   {
     japanese: "これが彼女が作ったケーキです。",
     english: "This is the cake that she made.",
-    words: ["this", "is", "the", "cake", "that", "she", "made"]
   },
   {
     japanese: "彼が昨日会った人々はとても親切でした。",
     english: "The people he met yesterday were very kind.",
-    words: ["the", "people", "he", "met", "yesterday", "were", "very", "kind"]
   },
   {
     japanese: "彼が好きな色は青です。",
     english: "The color that he likes is blue.",
-    words: ["the", "color", "that", "he", "likes", "is", "blue"]
   },
   {
     japanese: "私が住んでいる街は静かです。",
     english: "The city where I live is quiet.",
-    words: ["the", "city", "where", "i", "live", "is", "quiet"]
   },
   {
     japanese: "ドアを閉めてください。",
     english: "Please close the door.",
-    words: ["please", "close", "the", "door"]
   },
   {
     japanese: "もっと早く来てください。",
     english: "Please come earlier.",
-    words: ["please", "come", "earlier"]
   },
   {
     japanese: "これを忘れないでください！",
     english: "Don't forget this!",
-    words: ["don't", "forget", "this"]
   },
   {
     japanese: "彼を助けてください。",
     english: "Help him, please.",
-    words: ["help", "him", "please"]
   },
   {
     japanese: "素晴らしい眺めですね！",
     english: "What a beautiful view!",
-    words: ["what", "a", "beautiful", "view"]
   },
   {
     japanese: "なんて素敵なドレスなんでしょう！",
     english: "What a lovely dress!",
-    words: ["what", "a", "lovely", "dress"]
   },
   {
     japanese: "それを今すぐやりなさい。",
     english: "Do it right now.",
-    words: ["do", "it", "right", "now"]
   },
   {
     japanese: "もっと一生懸命頑張りなさい！",
     english: "Work harder!",
-    words: ["work", "harder"]
   },
   {
     japanese: "なんて面白い本なんだ！",
     english: "What an interesting book!",
-    words: ["what", "an", "interesting", "book"]
   },
   {
     japanese: "静かにしてください！",
     english: "Be quiet, please!",
-    words: ["be", "quiet", "please"]
   },
   {
     japanese: "私は早起きを楽しんでいます。",
     english: "I enjoy waking up early.",
-    words: ["i", "enjoy", "waking", "up", "early"]
   },
   {
     japanese: "彼は新しいスキルを学ぶことに興味があります。",
     english: "He is interested in learning new skills.",
-    words: ["he", "is", "interested", "in", "learning", "new", "skills"]
   },
   {
     japanese: "あなたに会えてうれしいです。",
     english: "It's nice to meet you.",
-    words: ["it's", "nice", "to", "meet", "you"]
   },
   {
     japanese: "彼女はピアノを弾く練習をしています。",
     english: "She is practicing playing the piano.",
-    words: ["she", "is", "practicing", "playing", "the", "piano"]
   },
   {
     japanese: "私は旅行に行くのが好きです。",
     english: "I like going on trips.",
-    words: ["i", "like", "going", "on", "trips"]
   },
   {
     japanese: "彼はその問題を解決しようとしています。",
     english: "He is trying to solve the problem.",
-    words: ["he", "is", "trying", "to", "solve", "the", "problem"]
   },
   {
     japanese: "この本を読む価値があります。",
     english: "This book is worth reading.",
-    words: ["this", "book", "is", "worth", "reading"]
   },
   {
     japanese: "私は英語を話すことを改善したいです。",
     english: "I want to improve my English speaking.",
-    words: ["i", "want", "to", "improve", "my", "english", "speaking"]
   },
   {
     japanese: "彼女は新しいプロジェクトを始めることを決めました。",
     english: "She decided to start a new project.",
-    words: ["she", "decided", "to", "start", "a", "new", "project"]
   },
   {
     japanese: "車を運転することは難しいと思います。",
     english: "I think driving a car is difficult.",
-    words: ["i", "think", "driving", "a", "car", "is", "difficult"]
   },
   {
     japanese: "私は外出したかったが、雨が降り始めた。",
     english: "I wanted to go out, but it started raining.",
-    words: ["i", "wanted", "to", "go", "out", "but", "it", "started", "raining"]
   },
   {
     japanese: "彼は疲れていたので、早く寝ました。",
     english: "He was tired, so he went to bed early.",
-    words: ["he", "was", "tired", "so", "he", "went", "to", "bed", "early"]
   },
   {
     japanese: "私は家を出る前に朝食を食べました。",
     english: "I had breakfast before leaving the house.",
-    words: ["i", "had", "breakfast", "before", "leaving", "the", "house"]
   },
   {
     japanese: "彼女は勉強を終えた後、友達と会いました。",
     english: "She met her friends after finishing her studies.",
-    words: ["she", "met", "her", "friends", "after", "finishing", "her", "studies"]
   },
   {
     japanese: "もし雨が降ったら、ピクニックをキャンセルします。",
     english: "If it rains, we will cancel the picnic.",
-    words: ["if", "it", "rains", "we", "will", "cancel", "the", "picnic"]
   },
   {
     japanese: "私は英語が好きです、なぜならそれは面白いからです。",
     english: "I like English because it is interesting.",
-    words: ["i", "like", "english", "because", "it", "is", "interesting"]
   },
   {
     japanese: "あなたが忙しい間、私は待っています。",
     english: "While you are busy, I will wait.",
-    words: ["while", "you", "are", "busy", "i", "will", "wait"]
   },
   {
     japanese: "彼は一生懸命働いている一方で、休む時間をほとんど持っていません。",
     english: "Although he works hard, he has little time to rest.",
-    words: ["although", "he", "works", "hard", "he", "has", "little", "time", "to", "rest"]
   },
   {
     japanese: "天気が良ければ、私たちはハイキングに行きます。",
     english: "We will go hiking as long as the weather is good.",
-    words: ["we", "will", "go", "hiking", "as", "long", "as", "the", "weather", "is", "good"]
   },
   {
     japanese: "私は彼に会うためにパーティーに行きました。",
     english: "I went to the party so that I could meet him.",
-    words: ["i", "went", "to", "the", "party", "so", "that", "i", "could", "meet", "him"]
   },
   {
     japanese: "ちょっと待って、すぐ戻るから。",
     english: "Hang on, I'll be right back.",
-    words: ["hang", "on", "i'll", "be", "right", "back"]
   },
   {
     japanese: "お腹が空いたね、何か食べようよ。",
     english: "I'm starving, let's grab something to eat.",
-    words: ["i'm", "starving", "let's", "grab", "something", "to", "eat"]
   },
   {
     japanese: "それ、本気で言ってるの？",
     english: "Are you serious?",
-    words: ["are", "you", "serious"]
   },
   {
     japanese: "やばい、完全にそれ忘れてた！",
     english: "Oh no, I totally forgot about that!",
-    words: ["oh", "no", "i", "totally", "forgot", "about", "that"]
   },
   {
     japanese: "行くなら早くしよう！",
     english: "If we're going, let's hurry up!",
-    words: ["if", "we're", "going", "let's", "hurry", "up"]
   },
   {
     japanese: "いい感じじゃない？",
     english: "Doesn't it look great?",
-    words: ["doesn't", "it", "look", "great"]
   },
   {
     japanese: "ちょっと考えさせて。",
     english: "Let me think about it.",
-    words: ["let", "me", "think", "about", "it"]
   },
   {
     japanese: "ちょっと待って、それはどういう意味？",
     english: "Wait a second, what do you mean by that?",
-    words: ["wait", "a", "second", "what", "do", "you", "mean", "by", "that"]
   },
   {
     japanese: "その映画、本当に最高だったよ。",
     english: "That movie was absolutely amazing.",
-    words: ["that", "movie", "was", "absolutely", "amazing"]
   },
   {
     japanese: "そんなに心配しなくていいよ。",
     english: "You don't need to worry so much.",
-    words: ["you", "don't", "need", "to", "worry", "so", "much"]
   },
   {
     japanese: "ちょっと考えすぎじゃない？",
     english: "Aren't you overthinking it?",
-    words: ["aren't", "you", "overthinking", "it"]
   },
   {
     japanese: "それ、めちゃくちゃ面白いね！",
     english: "That's hilarious!",
-    words: ["that's", "hilarious"]
   },
   {
     japanese: "気にしないで、忘れちゃいなよ。",
     english: "Don't worry about it, just let it go.",
-    words: ["don't", "worry", "about", "it", "just", "let", "it", "go"]
   },
   {
     japanese: "まじで？本当にそれ言ったの？",
     english: "Seriously? Did you really say that?",
-    words: ["seriously", "did", "you", "really", "say", "that"]
   },
   {
     japanese: "あとで連絡するから。",
     english: "I'll hit you up later.",
-    words: ["i'll", "hit", "you", "up", "later"]
   },
   {
     japanese: "これ、めっちゃカッコいいじゃん！",
     english: "This is so cool!",
-    words: ["this", "is", "so", "cool"]
   },
   {
     japanese: "そんなに焦らなくていいよ。",
     english: "No need to rush.",
-    words: ["no", "need", "to", "rush"]
   },
   {
     japanese: "とりあえずやってみようよ。",
     english: "Let's just give it a try.",
-    words: ["let's", "just", "give", "it", "a", "try"]
   },
   {
     japanese: "なんてこった、信じられない！",
     english: "Oh my gosh, I can't believe it!",
-    words: ["oh", "my", "gosh", "i", "can't", "believe", "it"]
   },
   {
     japanese: "まあ、そういうこともあるよね。",
     english: "Well, it happens.",
-    words: ["well", "it", "happens"]
   }
   ];
 
-    let currentSentenceIndex = 0; // 現在の問題文のインデックス
-    let currentIndex = 0; // sentence-box に入力された単語数
-    let typedWords = []; // sentence-box に入力された単語を格納する配列
-    let puzzleCompleted = false; // パズルが完了したかどうか
 
-    // HTML要素の取得
-    const japaneseSentence = document.getElementById("japanese-sentence"); // 日本語の例文表示エリア
-    const sentenceBox = document.getElementById("sentence-box"); // sentence-box (解答入力エリア)
-    const wordButtons = document.getElementById("word-buttons"); // 単語ボタンを表示するエリア
-    const feedback = document.getElementById("feedback"); // フィードバックメッセージを表示するエリア
-    const nextButton = document.getElementById("next-button"); // 「次に進む」ボタン
-    const hintButton = document.getElementById("hint-button"); // 「ヒント」ボタン
-    const confettiContainer = document.getElementById("confetti-container"); // 紙吹雪コンテナ
-
-
-    // 新しい問題文をロードする関数
-    function loadNewSentence() {
-      puzzleCompleted = false; // パズル未完了状態に戻す
-      nextButton.style.display = "none"; // 「次に進む」ボタンを非表示
-      hintButton.style.display = "inline-block"; // ヒントボタンを表示
-      typedWords = []; // 入力済み単語配列をリセット
-      currentIndex = 0; // 入力済み単語数をリセット
-      feedback.textContent = ""; // フィードバックエリアをクリア
-      feedback.style.color = ""; // フィードバックテキストの色をリセット
-
-      currentSentenceIndex = Math.floor(Math.random() * sentences.length); // sentences配列からランダムなインデックスを取得
-      const sentenceData = sentences[currentSentenceIndex]; // 取得したインデックスの問題文データを取得
-
-      japaneseSentence.textContent = sentenceData.japanese; // 日本語の例文をHTMLに表示
-      sentenceBox.textContent = ""; // sentence-box のテキストをクリア
-
-
-      const wordCountMap = {}; // 単語とその出現回数を記録するマップ
-      sentenceData.words.forEach(word => { // 問題文データ内の単語リストをループ処理
-        const lowerWord = word.toLowerCase(); // 単語を小文字に変換
-        if (!wordCountMap[lowerWord]) { // マップに単語が存在しない場合
-          wordCountMap[lowerWord] = { original: word, count: 0 }; // マップに新しい単語と出現回数0を登録
+  function generateWordsFromEnglish(englishSentence) {
+      const words = englishSentence.split(/([\s.,!?;"])/);
+      const separatedWords = [];
+      words.forEach(word => {
+        if (word.trim() !== "") {
+          const punctuationMatch = word.match(/^([.,!?;"]+)/);
+          const wordMatch = word.match(/([^.,!?;"]+)$/);
+          if (punctuationMatch) {
+            separatedWords.push(punctuationMatch[1]);
+          }
+          if (wordMatch) {
+            separatedWords.push(wordMatch[1]);
+          } else if (!punctuationMatch) {
+            separatedWords.push(word);
+          }
         }
-        wordCountMap[lowerWord].count++; // 単語の出現回数をインクリメント
       });
-
-      wordButtons.innerHTML = ""; // 単語ボタンエリアをクリア
-      const buttonElements = []; // ボタン要素を格納する配列
-      Object.keys(wordCountMap).forEach(lowerWord => { // 単語マップのキー（単語）をループ処理
-        const data = wordCountMap[lowerWord]; // 単語のデータ（オリジナル単語、出現回数）を取得
-        const button = document.createElement("button"); // ボタン要素を生成
-        button.classList.add("word"); // ボタンに "word" クラスを追加
-        button.dataset.word = lowerWord; // ボタンのデータ属性 "word" に小文字の単語をセット
-        button.dataset.count = data.count; // ボタンのデータ属性 "count" に出現回数をセット
-        button.dataset.usage = 0; // ボタンのデータ属性 "usage" に使用回数0をセット
-        button.textContent = data.count > 1 ? `${data.original} (x${data.count})` : data.original; // ボタンのテキストを設定 (複数回出現する場合は (x回数) を表示)
-
-        button.addEventListener("click", () => handleWordClick(button, data.original)); // ボタンクリック時のイベントリスナーを追加
-        buttonElements.push(button); // ボタン要素を配列に追加
-      });
-
-      // ボタン要素をランダムに配置
-      shuffleArray(buttonElements).forEach(button => {
-        wordButtons.appendChild(button); // シャッフルしたボタン要素を wordButtons エリアに追加
-      });
+      return separatedWords.filter(word => word !== "");
     }
 
-    // 単語ボタンクリック時の処理関数
+    let currentSentenceIndex = 0;
+    let currentIndex = 0;
+    let typedWords = [];
+    let puzzleCompleted = false;
+    let displayedButtons = []; // 表示中のボタン要素を格納する配列
+
+    const japaneseSentence = document.getElementById("japanese-sentence");
+    const sentenceBox = document.getElementById("sentence-box");
+    const wordButtons = document.getElementById("word-buttons");
+    const feedback = document.getElementById("feedback");
+    const nextButton = document.getElementById("next-button");
+    const hintButton = document.getElementById("hint-button");
+    const confettiContainer = document.getElementById("confetti-container");
+
+
+    function loadNewSentence() {
+      console.log("loadNewSentence 関数が実行されました");
+      puzzleCompleted = false;
+      nextButton.style.display = "none";
+      hintButton.style.display = "inline-block";
+      typedWords = [];
+      currentIndex = 0;
+      feedback.textContent = "";
+      feedback.style.color = "";
+      displayedButtons = [];
+      wordButtons.innerHTML = "";
+
+      currentSentenceIndex = Math.floor(Math.random() * sentences.length);
+      const sentenceData = sentences[currentSentenceIndex];
+      console.log("sentences データ:", sentences);
+
+      japaneseSentence.textContent = sentenceData.japanese;
+      sentenceBox.textContent = "";
+
+      const wordCountMap = {};
+      sentenceData.words.forEach(word => {
+        const lowerWord = word.toLowerCase();
+        if (!wordCountMap[lowerWord]) {
+          wordCountMap[lowerWord] = { original: word, count: 0 };
+        }
+        wordCountMap[lowerWord].count++;
+      });
+      console.log("wordCountMap:", wordCountMap);
+
+      const buttonElements = [];
+      Object.keys(wordCountMap).forEach(lowerWord => {
+        const data = wordCountMap[lowerWord];
+        const button = document.createElement("button");
+        button.classList.add("word", "fade-in");
+        button.dataset.word = lowerWord;
+        button.dataset.count = data.count;
+        button.dataset.usage = 0;
+        button.textContent = data.count > 1 ? `${data.original} (x${data.count})` : data.original;
+        button.addEventListener("click", () => handleWordClick(button, data.original));
+        buttonElements.push(button);
+      });
+      console.log("buttonElements 長さ:", buttonElements.length);
+      console.log("buttonElements:", buttonElements);
+
+      // 最初の5単語を候補ボタンとして表示
+      const firstFiveWords = sentenceData.words.slice(0, 5);
+      const firstFiveButtonElements = buttonElements.filter(button => firstFiveWords.includes(button.dataset.word));
+
+      // ボタン表示数を5つに制限
+      const shuffledButtons = shuffleArray(firstFiveButtonElements);
+      const buttonsToDisplay = shuffledButtons.slice(0, Math.min(5, shuffledButtons.length));
+      displayedButtons = buttonsToDisplay;
+
+      buttonsToDisplay.forEach(button => {
+        wordButtons.appendChild(button);
+      });
+
+      addNewButton();
+    }
+
+
     function handleWordClick(button, originalWord) {
-      if (puzzleCompleted) return; // パズル完了済みなら処理を中断
+      if (puzzleCompleted) return;
 
-      let count = parseInt(button.dataset.count, 10); // ボタンのデータ属性 "count" (出現回数) を取得
-      let usage = parseInt(button.dataset.usage, 10); // ボタンのデータ属性 "usage" (使用回数) を取得
-      if (usage >= count) return; // 使用回数が出現回数以上なら処理を中断
+      let count = parseInt(button.dataset.count, 10);
+      let usage = parseInt(button.dataset.usage, 10);
+      if (usage >= count) return;
 
-      const sentenceData = sentences[currentSentenceIndex]; // 現在の問題文データを取得
-      // expectedWords の生成時に句読点を除去
-      const rawExpectedWords = sentenceData.english.split(" "); // 解答英文を単語に分割 (句読点含む)
-      const expectedWords = rawExpectedWords.map(word => word.replace(/[,.\?]*$/, '').toLowerCase()); // 各単語から末尾の句読点を除去して小文字に変換
-      const clickedWord = button.dataset.word; // クリックされたボタンの単語（小文字）
+      const sentenceData = sentences[currentSentenceIndex];
+      const expectedWords = sentenceData.words;
+      const clickedWord = button.dataset.word;
 
-      if (clickedWord === expectedWords[currentIndex].toLowerCase()) { // クリックされた単語が解答の現在の単語と一致する場合（大文字・小文字を区別しない）
-        usage++; // 使用回数をインクリメント
-        button.dataset.usage = usage; // ボタンの使用回数を更新
-        typedWords.push(originalWord); // 入力済み単語配列にオリジナル単語を追加
-        currentIndex++; // 入力済み単語数をインクリメント
-        updateSentenceBox(); // sentence-box の表示を更新
+      if (clickedWord === expectedWords[currentIndex].toLowerCase()) {
+        usage++;
+        button.dataset.usage = usage;
+        typedWords.push(originalWord);
+        currentIndex++;
+        updateSentenceBox();
 
-        if (usage >= count) { // 使用回数が出現回数に達した場合
-          button.disabled = true; // ボタンを disabled 状態にする
-          button.classList.add("used-up"); // ボタンに "used-up" クラスを追加 (デザイン変更用)
-          button.textContent = `${button.textContent.split('(')[0]} (used up)`; // ボタンのテキストを "(used up)" に変更
-        } else { // まだ使用可能な場合
-          const remain = count - usage; // 残り使用回数を計算
-          button.textContent = remain > 1 ? `${button.textContent.split('(')[0]} (x${remain})` : button.textContent.split('(')[0]; // ボタンのテキストを更新 (残り回数を表示)
+        if (usage >= count) {
+          button.classList.add("fade-out");
+          button.classList.remove("fade-in");
+          button.addEventListener('animationend', () => {
+            button.remove();
+            displayedButtons = displayedButtons.filter(btn => btn !== button);
+            addNewButton();
+          }, { once: true });
+
+          button.disabled = true;
+          button.classList.add("used-up");
+          button.textContent = `${button.textContent.split('(')[0]} (used up)`;
+        } else {
+          const remain = count - usage;
+          button.textContent = remain > 1 ? `${button.textContent.split('(')[0]} (x${remain})` : button.textContent.split('(')[0];
         }
 
-        if (currentIndex === expectedWords.length) { // 全ての単語を入力し終えたら
-          feedback.textContent = "正解です！🎉"; // フィードバックエリアに「正解」メッセージを表示
-          feedback.style.color = "green"; // フィードバックテキストを緑色に
-          nextButton.style.display = "inline-block"; // 「次に進む」ボタンを表示
-          hintButton.style.display = "none"; // ヒントボタンを非表示
-          puzzleCompleted = true; // パズル完了状態にする
-          showConfetti(); // 紙吹雪アニメーションを実行
-        } else { // まだ単語入力が続く場合
-          feedback.textContent = ""; // フィードバックエリアをクリア
-          feedback.style.color = ""; // フィードバックテキストの色をリセット
+        if (currentIndex === expectedWords.length) {
+          feedback.textContent = "正解です！🎉";
+          feedback.style.color = "green";
+          nextButton.style.display = "inline-block";
+          hintButton.style.display = "none";
+          puzzleCompleted = true;
+          showConfetti();
+        } else {
+          feedback.textContent = "";
+          feedback.style.color = "";
         }
-      } else { // クリックされた単語が解答の現在の単語と一致しない場合
-        feedback.textContent = `間違っています。`; // フィードバックエリアに「間違っています」メッセージを表示
-        feedback.style.color = "red"; // フィードバックテキストを赤色に
+      } else {
+        feedback.textContent = `間違っています。`;
+        feedback.style.color = "red";
       }
     }
 
-    // sentence-box の表示を更新する関数
+    // 新しいボタンを追加する関数
+    function addNewButton() {
+      if (displayedButtons.length >= 5) return;
+      if (puzzleCompleted) return;
+
+      const sentenceData = sentences[currentSentenceIndex];
+      const expectedWords = sentenceData.words; // 正解の単語配列
+      const nextWordIndex = currentIndex; // 解答すべき現在の単語のインデックス
+      const candidateWords = expectedWords.slice(nextWordIndex, nextWordIndex + 5); // 解答に必要な単語と、その後の最大4単語を候補とする
+      const wordCountMap = {};
+      candidateWords.forEach(word => {
+        const lowerWord = word.toLowerCase();
+        if (!wordCountMap[lowerWord]) {
+          wordCountMap[lowerWord] = { original: word, count: 0 };
+        }
+        wordCountMap[lowerWord].count++;
+      });
+
+      const buttonElements = [];
+      Object.keys(wordCountMap).forEach(lowerWord => {
+        const data = wordCountMap[lowerWord];
+        if (displayedButtons.some(btn => btn.dataset.word === lowerWord) || wordButtons.querySelector(`.word.used-up[data-word="${lowerWord}"]`)) return;
+
+        const button = document.createElement("button");
+        button.classList.add("word", "fade-in");
+        button.dataset.word = lowerWord;
+        button.dataset.count = data.count;
+        button.dataset.usage = 0;
+        button.textContent = data.count > 1 ? `${data.original} (x${data.count})` : data.original;
+        button.addEventListener("click", () => handleWordClick(button, data.original));
+        buttonElements.push(button);
+      });
+
+      if (buttonElements.length > 0) {
+        const shuffledNewButtons = shuffleArray(buttonElements);
+        const newButtonsToAdd = shuffledNewButtons.slice(0, Math.min(5 - displayedButtons.length, shuffledNewButtons.length)); // 最大5個になるように調整
+        newButtonsToAdd.forEach(button => {
+          displayedButtons.push(button);
+          wordButtons.appendChild(button);
+        });
+      }
+    }
+
+
     function updateSentenceBox() {
-      sentenceBox.textContent = typedWords.join(" "); // 入力済み単語配列をスペース区切りで結合して sentence-box に表示
+      sentenceBox.textContent = typedWords.join(" ");
     }
 
-    // ヒントを表示する関数
     function showHint() {
-        if (puzzleCompleted || currentIndex >= sentences[currentSentenceIndex].english.split(" ").length) return; // パズル完了後、または文末ではヒントを表示しない
+        if (puzzleCompleted || currentIndex >= sentences[currentSentenceIndex].words.length) return;
 
-        const expectedWords = sentences[currentSentenceIndex].english.split(" "); // 解答英文を単語に分割
-        const nextWordHint = expectedWords[currentIndex]; // 次に入力すべき単語を取得
-        feedback.textContent = `ヒント: 次の単語は "${nextWordHint}" です。`; // ヒントメッセージをフィードバックエリアに表示
-        feedback.style.color = "blue"; // ヒントテキストを青色に
+        const expectedWords = sentences[currentSentenceIndex].words;
+        const nextWordHint = expectedWords[currentIndex];
+        feedback.textContent = `ヒント: 次の単語は "${nextWordHint}" です。`;
+        feedback.style.color = "blue";
     }
 
-    // 紙吹雪アニメーションを表示する関数
     function showConfetti() {
-        confettiContainer.innerHTML = ''; // コンテナをクリア
+        confettiContainer.innerHTML = '';
 
-        for (let i = 0; i < 100; i++) { // 紙吹雪の数を調整
-            const confettiPiece = document.createElement('div'); // 紙吹雪ピース要素を生成
-            confettiPiece.classList.add('confetti-piece'); // 紙吹雪ピースに confetti-piece クラスを追加
-            confettiPiece.style.backgroundColor = getRandomColor(); // 紙吹雪の色をランダムに設定
-            confettiPiece.style.left = `${Math.random() * 100}vw`; // 紙吹雪の水平位置をランダムに設定
-            confettiPiece.style.animationDelay = `${Math.random()}s`; // アニメーション遅延時間をランダムに設定
-            confettiPiece.style.animationDuration = `${2 + Math.random() * 3}s`; // アニメーション持続時間をランダムに設定
+        for (let i = 0; i < 100; i++) {
+            const confettiPiece = document.createElement('div');
+            confettiPiece.classList.add('confetti-piece');
+            confettiPiece.style.backgroundColor = getRandomColor();
+            confettiPiece.style.left = `${Math.random() * 100}vw`;
+            confettiPiece.style.animationDelay = `${Math.random()}s`;
+            confettiPiece.style.animationDuration = `${2 + Math.random() * 3}s`;
 
-            confettiContainer.appendChild(confettiPiece); // 紙吹雪ピースをコンテナに追加
+            confettiContainer.appendChild(confettiPiece);
         }
 
-        confettiContainer.style.display = "block"; // 紙吹雪コンテナを表示
+        confettiContainer.style.display = "block";
 
-        setTimeout(() => { // 一定時間後に紙吹雪アニメーションを非表示にする
-            confettiContainer.style.display = "none"; // 紙吹雪コンテナを非表示
-        }, 5000); // 5秒後に非表示
+        setTimeout(() => {
+            confettiContainer.style.display = "none";
+        }, 5000);
     }
 
-    // ランダムな色を生成する関数
     function getRandomColor() {
-        const colors = ['#fce18a', '#ff726d', '#b48def', '#f7cac9', '#88d8b0']; // 紙吹雪の色の候補
-        return colors[Math.floor(Math.random() * colors.length)]; // 色の候補からランダムに色を選択して返す
+        const colors = ['#fce18a', '#ff726d', '#b48def', '#f7cac9', '#88d8b0'];
+        return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    // 配列をシャッフルする関数 (Fisher-Yates shuffleアルゴリズム)
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // 要素をランダムに入れ替える
+        [array[i], array[j]] = [array[j], array[i]];
       }
-      return array; // シャッフルされた配列を返す
+      return array;
     }
 
+  // sentences の words プロパティを english から自動生成 (loadNewSentence() 呼び出しより前に追加)
+  sentences.forEach(sentence => {
+    sentence.words = generateWordsFromEnglish(sentence.english);
+  });
 
-    nextButton.addEventListener("click", loadNewSentence); // 「次に進む」ボタンクリックで loadNewSentence 関数を実行
-    hintButton.addEventListener("click", showHint); // 「ヒント」ボタンクリックで showHint 関数を実行
-    loadNewSentence(); // ページ読み込み時に最初の問題文をロード
+    nextButton.addEventListener("click", loadNewSentence);
+    hintButton.addEventListener("click", showHint);
+    loadNewSentence();
+    console.log("loadNewSentence() が呼び出されました");
   </script>
 
 
