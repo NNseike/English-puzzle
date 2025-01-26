@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>英語文法パズル（直近5単語表示）</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>英語文法パズル（5ボタン固定／正解スロット置換）</title>
   <style>
     /* リセット */
     * {
@@ -23,15 +23,12 @@
       margin: 0 auto;
       padding: 1rem;
       text-align: center;
+      position: relative; /* 紙吹雪用 */
     }
 
     h1 {
       margin-bottom: 1rem;
       font-size: 1.5rem;
-    }
-
-    p {
-      margin-bottom: 0.5rem;
     }
 
     .sentence-box {
@@ -46,8 +43,9 @@
 
     .words {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      grid-template-columns: repeat(5, 1fr); /* 常に5列 */
       gap: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     .word {
@@ -60,39 +58,12 @@
       border: none;
       transition: background-color 0.2s, transform 0.1s;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
-      opacity: 0; /* フェードイン用 初期状態 */
-      animation-duration: 0.2s;
-      animation-fill-mode: forwards;
     }
 
     .word:hover {
       background-color: #0056b3;
       transform: scale(1.05);
       box-shadow: 3px 3px 7px rgba(0,0,0,0.2);
-    }
-
-    .word.fade-out {
-      animation-name: fadeOut; /* フェードアウトアニメーション */
-    }
-
-    .word.fade-in {
-      animation-name: fadeIn; /* フェードインアニメーション */
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        transform: scale(0.8);
-      }
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
     }
 
     .used-up {
@@ -106,7 +77,7 @@
       min-height: 1.5rem;
     }
 
-    .next-button, .hint-button {
+    .hint-button, .next-button {
       display: none;
       width: 100%;
       padding: 0.75rem;
@@ -117,24 +88,19 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-
+    .hint-button {
+      background-color: #ffc107;
+      color: #333;
+    }
+    .hint-button:hover {
+      background-color: #ffb300;
+    }
     .next-button {
       background-color: #28a745;
       color: #fff;
     }
-
     .next-button:hover {
       background-color: #218838;
-    }
-
-    .hint-button {
-      background-color: #ffc107;
-      color: #333;
-      margin-top: 0.5rem;
-    }
-
-    .hint-button:hover {
-      background-color: #ffb300;
     }
 
     @media (max-width: 600px) {
@@ -148,11 +114,12 @@
         font-size: 0.85rem;
         padding: 0.5rem;
       }
-      .next-button, .hint-button {
+      .hint-button, .next-button {
         font-size: 0.9rem;
       }
     }
 
+    /* 紙吹雪 */
     .confetti {
       position: absolute;
       pointer-events: none;
@@ -173,13 +140,12 @@
       left: 0;
       opacity: 0;
     }
-
   </style>
 </head>
 <body>
 <div class="container">
   <h1>英語文法パズル</h1>
-  <h3 id="japanese-sentence"><strong></strong></h3>
+  <h3 id="japanese-sentence"></h3>
 
   <div class="sentence-box" id="sentence-box"></div>
   <div class="words" id="word-buttons"></div>
@@ -191,12 +157,7 @@
 <div class="confetti" id="confetti-container"></div>
 
 <script>
-  /* 
-   * ◆◆◆ ここから要注意 ◆◆◆
-   * 以下の sentences 配列には {japanese, english} のペアを持つオブジェクトが並ぶ。
-   * その後、自動で sentence.words = generateWordsFromEnglish(sentence.english) を付与。
-   */
-   const sentences = [
+  const sentences = [
   {
     japanese: "私は毎日コーヒーを飲みながら新聞を読むのが日課ですが、日曜日だけは家族と一緒に公園に行き、ボードゲームを楽しむことにしています。",
     english: "I make it a habit to drink coffee and read the newspaper every day, but on Sundays, I go to the park with my family to enjoy playing board games.",
@@ -840,55 +801,49 @@
   ];
 
 
-  /*
-   * 要件により、"直近の5単語" を取得するため、
-   * currentIndex 以降の未入力単語を先頭から最大5つまで取得し、
-   * それをランダムで表示させる。
-   */
-
-  // ==== Utility: 文章を単語(+句読点)に分解する ====
+  // 単語分割関数
   function generateWordsFromEnglish(englishSentence) {
     // 空白・句読点などで分割
     const words = englishSentence.split(/([\s.,!?;":]+)/);
-    const separatedWords = [];
-    words.forEach(word => {
-      if (word.trim() !== "") {
-        separatedWords.push(word);
-      }
-    });
-    // 不要な空白要素などを除去
-    return separatedWords.filter(w => w.trim() !== "");
+    // trimして不要要素を排除
+    return words.map(w => w.trim()).filter(w => w !== "");
   }
 
-  // sentences に words プロパティを加える
+  // 全部の文に対して分割単語を付与
   sentences.forEach(sentence => {
     sentence.words = generateWordsFromEnglish(sentence.english);
   });
 
-  let currentSentenceIndex = 0;
-  let currentIndex = 0;        // 現在、何個の単語を入力済みか
-  let typedWords = [];         // 入力済み単語の配列
-  let puzzleCompleted = false; // 問題が完成したかどうか
+  let currentSentenceIndex = 0;  // 今どの文を解いているか
+  let currentIndex = 0;          // 次に正解すべき単語のインデックス
+  let loadIndex = 0;             // 次にボタンへ補充する未使用単語のインデックス
+  let typedWords = [];           // 正解済み単語
+  let puzzleCompleted = false;
 
+  // 「常時表示する5ボタン」用DOMと、その中に表示中の単語を保持する配列
+  let buttonElements = [];
+  let displayWords = new Array(5).fill(null); // ボタンに表示中の単語
+
+  // 画面上の要素取得
   const japaneseSentence = document.getElementById("japanese-sentence");
   const sentenceBox      = document.getElementById("sentence-box");
   const wordButtons      = document.getElementById("word-buttons");
   const feedback         = document.getElementById("feedback");
-  const nextButton       = document.getElementById("next-button");
   const hintButton       = document.getElementById("hint-button");
+  const nextButton       = document.getElementById("next-button");
   const confettiContainer = document.getElementById("confetti-container");
 
-  // ===== 新しい問題をロードする =====
+  // ========= 新しい問題をロード =========
   function loadNewSentence() {
     puzzleCompleted = false;
-    nextButton.style.display = "none";
-    hintButton.style.display = "inline-block";
-    typedWords = [];
-    currentIndex = 0;
     feedback.textContent = "";
     feedback.style.color = "";
-
-    wordButtons.innerHTML = "";
+    hintButton.style.display = "inline-block";
+    nextButton.style.display = "none";
+    typedWords = [];
+    currentIndex = 0;
+    loadIndex = 0;
+    displayWords = new Array(5).fill(null);
 
     // ランダムに1問選択
     currentSentenceIndex = Math.floor(Math.random() * sentences.length);
@@ -896,50 +851,76 @@
 
     // 日本語文表示
     japaneseSentence.textContent = sentenceData.japanese;
-    // sentence-box を空に
+    // 入力済み表示エリアを空に
     sentenceBox.textContent = "";
 
-    // 表示するボタンを更新
-    createWordButtons();
-  }
-
-  // ===== ボタンを再生成（常に5つ or 残りが5未満の場合は残り数） =====
-  function createWordButtons() {
+    // ボタンを初期化
     wordButtons.innerHTML = "";
-    const sentenceData = sentences[currentSentenceIndex];
-    const expectedWords = sentenceData.words;
+    buttonElements = [];
 
-    // 未入力単語リスト: currentIndex以降の単語を先頭に近い順で取得
-    const remainingWords = expectedWords.slice(currentIndex);
+    // 最初に「未使用単語」を最大5つ取り出して、まとめてシャッフルしてセット
+    initDisplayWords();
 
-    // ボタンとして表示する最大5つを取得
-    const buttonCandidates = remainingWords.slice(0, 5);
+    // 5つのボタンを作成して画面に表示
+    for (let i = 0; i < 5; i++) {
+      const btn = document.createElement("button");
+      btn.classList.add("word");
 
-    // ランダム順にしたい場合はシャッフル
-    const shuffled = shuffleArray(buttonCandidates);
+      // displayWords[i] があればテキストを設定、なければ空
+      if (displayWords[i]) {
+        btn.textContent = displayWords[i];
+      } else {
+        // 文章の単語数が5未満の場合など
+        btn.textContent = "";
+        btn.style.visibility = "hidden"; // 空枠を隠す
+      }
 
-    // ランダム順にボタン生成
-    shuffled.forEach(word => {
-      const button = document.createElement("button");
-      button.classList.add("word", "fade-in");
-      button.textContent = word;
-      button.addEventListener("click", () => handleWordClick(word, button));
-      wordButtons.appendChild(button);
-    });
+      // クリックイベント（どのボタンを押したかiでわかるように）
+      btn.addEventListener("click", () => handleWordClick(i));
+      wordButtons.appendChild(btn);
+      buttonElements.push(btn);
+    }
   }
 
-  // ===== ボタンクリック時の動作 =====
-  function handleWordClick(clickedWord, button) {
-    if (puzzleCompleted) return; // すでに完成している場合は反応しない
+  // ========= 初期表示する5単語をシャッフルして displayWords にセット =========
+  function initDisplayWords() {
+    const sentenceData = sentences[currentSentenceIndex];
+    const expectedWords = sentenceData.words;
+
+    // 未使用単語があれば最大5個取り出す
+    const chunk = [];
+    for (let i = 0; i < 5; i++) {
+      if (loadIndex < expectedWords.length) {
+        chunk.push(expectedWords[loadIndex]);
+        loadIndex++;
+      }
+    }
+    // chunkをシャッフル
+    const shuffled = shuffleArray(chunk);
+
+    // displayWords 配列に代入
+    for (let i = 0; i < shuffled.length; i++) {
+      displayWords[i] = shuffled[i];
+    }
+    // 残り部分は null (fill済み)
+  }
+
+  // ========= ボタンクリック =========
+  function handleWordClick(btnIndex) {
+    if (puzzleCompleted) return;
 
     const sentenceData = sentences[currentSentenceIndex];
     const expectedWords = sentenceData.words;
 
-    // 正解判定: 「現在必要な単語」と一致すればOK
+    // 今正解が必要な単語
     const correctWord = expectedWords[currentIndex];
 
+    // ユーザーがクリックした単語
+    const clickedWord = displayWords[btnIndex];
+    if (!clickedWord) return; // ボタンが空の場合など
+
     if (clickedWord === correctWord) {
-      // 正解: sentence-boxに追加
+      // 正解
       typedWords.push(clickedWord);
       currentIndex++;
       updateSentenceBox();
@@ -947,19 +928,30 @@
       feedback.textContent = "";
       feedback.style.color = "";
 
-      // 次の単語がまだある場合はボタン表示を更新
-      if (currentIndex < expectedWords.length) {
-        createWordButtons(); // 再度生成して「直近5単語」を表示
+      // ボタン置き換え
+      // まだ未使用の単語が残っているなら、それをこのボタンにセットする
+      if (loadIndex < expectedWords.length) {
+        const newWord = expectedWords[loadIndex];
+        loadIndex++;
+        displayWords[btnIndex] = newWord;
+        buttonElements[btnIndex].textContent = newWord;
       } else {
-        // 全単語入力完了（クリア）
+        // もう残りの単語がない場合は、✔️にして無効化する
+        displayWords[btnIndex] = null;
+        buttonElements[btnIndex].textContent = "✔️";
+        buttonElements[btnIndex].disabled = true;
+        buttonElements[btnIndex].classList.add("used-up");
+      }
+
+      // 全部の単語を使い切ったらクリア
+      if (currentIndex >= expectedWords.length) {
         puzzleCompleted = true;
-        feedback.textContent = "正解です！🎉";
+        feedback.textContent = "正解です！おめでとう！";
         feedback.style.color = "green";
         hintButton.style.display = "none";
         nextButton.style.display = "inline-block";
         showConfetti();
       }
-
     } else {
       // 不正解
       feedback.textContent = "間違っています。";
@@ -967,23 +959,24 @@
     }
   }
 
-  // ===== sentence-box の更新 =====
-  function updateSentenceBox() {
-    sentenceBox.textContent = typedWords.join(" ");
-  }
-
-  // ===== ヒント表示 =====
+  // ========= ヒントボタン =========
   function showHint() {
     if (puzzleCompleted) return;
     const sentenceData = sentences[currentSentenceIndex];
     const expectedWords = sentenceData.words;
-    if (currentIndex >= expectedWords.length) return;
-    const nextWordHint = expectedWords[currentIndex];
-    feedback.textContent = `ヒント: 次の単語は "${nextWordHint}" です。`;
-    feedback.style.color = "blue";
+    if (currentIndex < expectedWords.length) {
+      const nextWord = expectedWords[currentIndex];
+      feedback.textContent = `ヒント: 次の単語は "${nextWord}" です。`;
+      feedback.style.color = "blue";
+    }
   }
 
-  // ===== 紙吹雪アニメーション =====
+  // ========= 入力済み単語の表示を更新 =========
+  function updateSentenceBox() {
+    sentenceBox.textContent = typedWords.join(" ");
+  }
+
+  // ========= 紙吹雪アニメーション =========
   function showConfetti() {
     confettiContainer.innerHTML = "";
 
@@ -1008,7 +1001,7 @@
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
-  // ===== 配列シャッフル関数 =====
+  // ========= 配列シャッフル関数 =========
   function shuffleArray(array) {
     const arr = array.slice();
     for (let i = arr.length - 1; i > 0; i--) {
@@ -1018,11 +1011,11 @@
     return arr;
   }
 
-  // ===== イベントリスナー =====
+  // ========= イベントリスナー =========
   nextButton.addEventListener("click", loadNewSentence);
   hintButton.addEventListener("click", showHint);
 
-  // 初期ロード
+  // ========= 初期ロード =========
   loadNewSentence();
 </script>
 </body>
