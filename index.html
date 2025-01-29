@@ -210,48 +210,128 @@
   <div class="confetti" id="confetti-container"></div>
   <script>
     const stages = [
-      [ // Stage 1 (10問)
-        {
-          japanese: "私は毎日コーヒーを飲みながら新聞を読むのが日課ですが、日曜日だけは家族と一緒に公園に行き、ボードゲームを楽しむことにしています。",
-          english: "I make it a habit to drink coffee and read the newspaper every day, but on Sundays, I go to the park with my family to enjoy playing board games.",
-        },
-        {
-          japanese: "昨日はとても忙しい日で、朝から昼までオンライン会議があり、午後にはジムに行き、その後友人と夕食を楽しみました。",
-          english: "Yesterday was such a busy day; I had online meetings from morning until noon, went to the gym in the afternoon, and then enjoyed dinner with my friend.",
-        },
-        {
-          japanese: "私は旅行が好きで、特に美しい自然や歴史的な街並みを見ることができる場所を訪れるのが大好きです。",
-          english: "I love traveling, especially visiting places where I can see beautiful nature and historical cityscapes.",
-        },
-        {
-          japanese: "この本は、科学者がどのように複雑な問題を解決するかについて非常に興味深い洞察を提供してくれます。",
-          english: "This book provides fascinating insights into how scientists solve complex problems.",
-        },
-        {
-          japanese: "将来は、地球温暖化を防ぐための解決策を研究する科学者になりたいと考えています。",
-          english: "In the future, I want to become a scientist who researches solutions to prevent global warming.",
-        },
-        {
-          japanese: "私の母は料理がとても上手で、特に彼女の作るパスタ料理は家族全員のお気に入りです。",
-          english: "My mother is an excellent cook, and her pasta dishes, in particular, are a favorite of the whole family.",
-        },
-        {
-          japanese: "来年、私たちは新しい家に引っ越す予定で、その家には庭があり、ガーデニングを楽しむのが待ち遠しいです。",
-          english: "Next year, we are planning to move to a new house that has a garden, and I can’t wait to enjoy gardening.",
-        },
-        {
-          japanese: "彼女は常に新しいアイデアを考え出し、問題に対して創造的な解決策を見つけるのが得意です。",
-          english: "She is always coming up with new ideas and is excellent at finding creative solutions to problems.",
-        },
-        {
-          japanese: "私たちの町では、毎年夏に大規模なお祭りが開催され、地元の人々や観光客がたくさん集まります。",
-          english: "In our town, a large festival is held every summer, attracting many locals and tourists.",
-        },
-        {
-          japanese: "週末には、友人と一緒に映画を見るか、新しいレストランを試すのが私たちの楽しみです。",
-          english: "On weekends, my friends and I enjoy either watching movies or trying out new restaurants.",
-        }
-      ],
+      [
+  {
+    "japanese": "やあ、最近どう？",
+    "english": "Hey, what's up?"
+  },
+  {
+    "japanese": "特に変わりないよ。ちょうどジムから戻ってきたところだよ。",
+    "english": "Not much. I just got back from the gym."
+  },
+  {
+    "japanese": "また夜中に行ったの？ 毎日通ってるの？",
+    "english": "Another late-night session? You really go every day?"
+  },
+  {
+    "japanese": "うん、深夜は空いてて集中しやすいんだ。",
+    "english": "Yeah, it's quiet at night, so it's easier to focus."
+  },
+  {
+    "japanese": "そうなんだ。仕事はどうしたの？ 辞めたって聞いたけど。",
+    "english": "I see. What about work? I heard you quit."
+  },
+  {
+    "japanese": "うん、辞めちゃった。インドに行くから自由に動きたくてさ。",
+    "english": "Yeah, I did. I'm going to India, so I wanted more freedom."
+  },
+  {
+    "japanese": "いいね！ インドのどこに行くの？",
+    "english": "Awesome! Where in India are you going?"
+  },
+  {
+    "japanese": "ジャイサルメールってとこで、砂漠祭りを見に行くんだ。",
+    "english": "I'm heading to Jaisalmer to see the desert festival."
+  },
+  {
+    "japanese": "砂漠祭り？ 面白そうだね。どれくらい滞在するの？",
+    "english": "A desert festival? That sounds cool. How long are you staying?"
+  },
+  {
+    "japanese": "まだ決めてないけど、2週間くらいかな。",
+    "english": "Not sure yet, maybe around two weeks."
+  },
+  {
+    "japanese": "一人で行くの？",
+    "english": "Are you going alone?"
+  },
+  {
+    "japanese": "うん、一人旅。ちょっと不安だけど楽しみの方が大きいよ。",
+    "english": "Yeah, it's a solo trip. I'm a bit nervous, but mostly excited."
+  },
+  {
+    "japanese": "絶対いい経験になるよ。",
+    "english": "It'll be an amazing experience."
+  },
+  {
+    "japanese": "そうだね。あ、明日夕飯一緒にどう？",
+    "english": "True. Hey, want to grab dinner tomorrow?"
+  },
+  {
+    "japanese": "いいよ、どこ行く？",
+    "english": "Sure, where to?"
+  },
+  {
+    "japanese": "牛丼屋がいいかな。安いし手軽だから。",
+    "english": "Maybe a beef bowl place. It's cheap and convenient."
+  },
+  {
+    "japanese": "いいね。天丼も好きだけど、牛丼も捨てがたいよね。",
+    "english": "Sounds good. I love tempura bowls too, but beef bowls are great."
+  },
+  {
+    "japanese": "うん、今は節約したいから牛丼で十分かな。",
+    "english": "Yeah, I'm trying to save money right now, so beef bowls are perfect."
+  },
+  {
+    "japanese": "なるほど。仕事してないと出費も気になるよね。普段は何してる？",
+    "english": "Makes sense. Without a job, expenses matter. What do you usually do?"
+  },
+  {
+    "japanese": "YouTube見たり、アニメや映画を観たり、音楽聴いたりしてるよ。",
+    "english": "I watch YouTube, anime, movies, and listen to music."
+  },
+  {
+    "japanese": "ボクシングも観るんでしょ？ おすすめある？",
+    "english": "You also watch boxing, right? Any recommendations?"
+  },
+  {
+    "japanese": "最近は○○って選手にハマってる。試合が熱いんだ。",
+    "english": "Lately, I'm into a boxer named ___. His matches are intense."
+  },
+  {
+    "japanese": "面白そうだね。ちょっとチェックしてみるよ。",
+    "english": "Sounds interesting. I'll check him out."
+  },
+  {
+    "japanese": "ぜひ。結構盛り上がるから見てほしいな。",
+    "english": "Sure. I'd love for you to see how exciting it is."
+  },
+  {
+    "japanese": "ところで、ジムってどの時間帯が多いの？",
+    "english": "By the way, what time do you usually go to the gym?"
+  },
+  {
+    "japanese": "ほとんど真夜中だよ。空いてるから快適なんだ。",
+    "english": "Mostly around midnight. It's empty, so it's comfortable."
+  },
+  {
+    "japanese": "俺は朝派だけど、夜中のジムも試してみようかな。",
+    "english": "I'm a morning person, but maybe I'll try a late-night workout."
+  },
+  {
+    "japanese": "いいじゃん。もし行くなら声かけてよ。",
+    "english": "That'd be cool. Let me know if you do."
+  },
+  {
+    "japanese": "了解。ところでインドはいつ出発するの？",
+    "english": "Got it. So when are you leaving for India?"
+  },
+  {
+    "japanese": "来月くらいかな。日程はまだ調整中だけど楽しみだよ。",
+    "english": "Probably next month. I'm still working out the dates, but I'm excited."
+  }
+],
       [ // Stage 2 (10問)
         {
           japanese: "A: 昨日新しいカフェに行ったんだけど、すごく良かったよ。\nB: 本当に？どんな雰囲気だったの？\nA: とても落ち着いた感じで、コーヒーも美味しかった。\nB: 場所はどこ？今度一緒に行こうよ。\nA: 駅から徒歩5分くらいのところだよ。ぜひ行こう！",
